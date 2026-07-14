@@ -68,6 +68,22 @@ SENDER_NAME = _get_str_env("SENDER_NAME", "MailCommandBot")
 ALLOWED_SENDERS = _get_str_env("ALLOWED_SENDERS", "")
 # 允许触发命令执行的邮箱域名（逗号分隔，留空表示不限制）
 ALLOWED_DOMAINS = _get_str_env("ALLOWED_DOMAINS", "")
+# 允许连接SMTP接收服务器的客户端IP白名单（逗号分隔，留空表示不限制）
+# 用于防止外部未授权主机伪造 MAIL FROM 发送命令邮件
+ALLOWED_CLIENT_IPS = _get_str_env("ALLOWED_CLIENT_IPS", "")
+# 白名单未配置时是否强制要求配置（true 时未配置白名单则仅允许绑定 127.0.0.1）
+REQUIRE_WHITELIST = os.getenv("REQUIRE_WHITELIST", "true").lower() == "true"
+
+# ==================== sudo 配置 ====================
+# 是否使用 sudoers NOPASSWD 模式（无需通过邮件传输 sudo 密码）
+# 启用此选项前，请在 /etc/sudoers 中配置对应用户的 NOPASSWD 规则
+# 例如：mailbot ALL=(ALL) NOPASSWD: /bin/ls, /bin/cat
+# 安全警告：通过邮件传输 sudo 密码存在安全风险，强烈建议启用 NOPASSWD 模式
+SUDO_NOPASSWD = os.getenv("SUDO_NOPASSWD", "false").lower() == "true"
+
+# ==================== 频率限制配置 ====================
+# 每个发件人每分钟最多发送的命令邮件数（防止滥用）
+RATE_LIMIT_PER_MINUTE = _get_int_env("RATE_LIMIT_PER_MINUTE", 10, min_val=1, max_val=1000)
 
 # ==================== 命令执行配置 ====================
 # 命令执行超时时间（秒）
@@ -79,7 +95,12 @@ CMD_TRUNCATE_HINT = "\n... [输出已截断，超出最大长度限制]"
 
 # ==================== 邮件大小限制 ====================
 # 单封邮件最大字节数（超过则拒绝处理，防止OOM）
-MAX_EMAIL_SIZE = _get_int_env("MAX_EMAIL_SIZE", 10 * 1024 * 1024, min_val=1024, max_val=50 * 1024 * 1024)
+# 默认 1MB，已从 10MB 降低以减少内存风险
+MAX_EMAIL_SIZE = _get_int_env("MAX_EMAIL_SIZE", 1024 * 1024, min_val=1024, max_val=10 * 1024 * 1024)
+
+# ==================== SMTP 连接保活配置 ====================
+# SMTP 外发连接心跳保活间隔（秒），0 表示禁用心跳
+SMTP_KEEPALIVE_INTERVAL = _get_int_env("SMTP_KEEPALIVE_INTERVAL", 60, min_val=0, max_val=3600)
 
 # ==================== 自动更新配置 ====================
 # GitHub仓库地址（用于自动更新）

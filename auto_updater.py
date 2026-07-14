@@ -134,6 +134,9 @@ class AutoUpdater:
 
         try:
             logger.info("开始执行更新 (分支: %s)...", self.branch)
+            # 设置 git 安全环境变量，防止读取系统级配置和终端交互提示
+            os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
+            os.environ["GIT_TERMINAL_PROMPT"] = "0"
             result = subprocess.run(
                 ["git", "pull", "origin", self.branch],
                 cwd=self.project_dir,
@@ -251,13 +254,22 @@ class AutoUpdater:
 
     @staticmethod
     def _increment_restart_count() -> None:
-        """增加重启计数"""
+        """增加重启计数（使用临时文件 + os.rename 实现原子写入）"""
         try:
             count = AutoUpdater._read_restart_count() + 1
-            with open(_RESTART_COUNT_FILE, "w") as f:
+            # 写入临时文件，然后原子性重命名，防止写入过程中崩溃导致文件损坏
+            tmp_file = _RESTART_COUNT_FILE + ".tmp"
+            with open(tmp_file, "w") as f:
                 f.write(str(count))
+            os.rename(tmp_file, _RESTART_COUNT_FILE)
         except IOError as e:
             logger.warning("无法写入重启计数文件: %s", e)
+            # 清理可能残留的临时文件
+            try:
+                if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
+                    os.remove(_RESTART_COUNT_FILE + ".tmp")
+            except OSError:
+                pass
 
     @staticmethod
     def reset_restart_count() -> None:

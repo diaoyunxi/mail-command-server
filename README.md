@@ -84,25 +84,33 @@ your_sudo_password
 
 本服务实现了以下多层安全防护：
 
-1. **发件人白名单**：通过 `ALLOWED_SENDERS`（完整邮箱）或 `ALLOWED_DOMAINS`（域名）限制可触发命令的发件人。未配置时默认不限制（首次部署建议立即配置）。
+1. **发件人白名单**：通过 `ALLOWED_SENDERS`（完整邮箱）或 `ALLOWED_DOMAINS`（域名）限制可触发命令的发件人。未配置白名单时，若 `REQUIRE_WHITELIST=true`（默认），服务将强制绑定 `127.0.0.1` 以防止未授权访问。
 
-2. **命令黑名单**：内置 30+ 种危险命令模式匹配，包括但不限于：
-   - 破坏性命令：`rm -rf`、`mkfs`、`shutdown`、`dd if=`、`format`
-   - 权限操作：`passwd`、`useradd`、`chown -R`、`iptables -F`
-   - 远程执行：`curl | sh`、`wget | sh`、`nc -e`
-   - 代码执行：`python -c`、`perl -e`、`eval`、`source`、`. /path/to/script`
+2. **客户端IP白名单**：通过 `ALLOWED_CLIENT_IPS` 限制可连接SMTP服务器的客户端IP，防止外部主机伪造 `MAIL FROM` 发送命令邮件。**强烈建议**在对外提供服务时配置此项，并结合 SPF/DKIM/DMARC 邮件认证机制使用。
 
-3. **防命令注入**：使用 `subprocess.Popen(shell=False)` + `shlex.split()` 执行命令，用户输入不经过 shell 解释，彻底杜绝命令注入。sudo 密码通过 stdin 安全传入。
+3. **命令白名单**：采用白名单模式，仅允许以下安全命令执行：`ls, cat, df, ps, uptime, free, head, tail, grep, wc, date, whoami, id, uname, ifconfig, ip, netstat, ss, top, du, find`。其他命令一律拒绝。`find` 命令禁止使用 `-delete`、`-exec` 等危险参数。禁止管道符（`|`）、重定向（`>`/`<`）、命令替换（`` ` ``/`$()`）等 shell 元字符。
 
-4. **执行超时**：默认 30 秒超时，防止命令挂死；超时后通过进程组 kill 确保无残留子进程。
+4. **命令模板**：支持通过 `@template:名称` 引用预定义安全命令，如 `@template:disk` 执行 `df -h`。
 
-5. **输出截断**：默认最大 50000 字符，防止过大输出占用资源。
+5. **防命令注入**：使用 `subprocess.Popen(shell=False)` + `shlex.split()` 执行命令，用户输入不经过 shell 解释，彻底杜绝命令注入。sudo 密码通过 stdin 安全传入。
 
-6. **邮件大小限制**：默认 10MB，超大邮件直接拒绝，防止 OOM。
+6. **sudo 密码安全**：通过邮件传输 sudo 密码存在安全风险。建议启用 `SUDO_NOPASSWD=true` 并在 `/etc/sudoers` 中配置 NOPASSWD 规则（如 `mailbot ALL=(ALL) NOPASSWD: /bin/ls, /bin/cat`），启用后服务将忽略邮件中的密码。
 
-7. **重启保护**：自动更新后最多重启 5 次，防止代码错误导致无限重启循环。
+7. **频率限制**：每个发件人每分钟最多发送 `RATE_LIMIT_PER_MINUTE`（默认10）封命令邮件，超出限制将返回 450 错误。
 
-8. **健康检查**：自动更新后编译检查所有 Python 文件，语法错误时自动回滚。
+8. **执行超时**：默认 30 秒超时，防止命令挂死；超时后通过进程组 kill 确保无残留子进程。
+
+9. **输出截断**：默认最大 50000 字符，防止过大输出占用资源。
+
+10. **敏感信息脱敏**：日志和回复邮件中对命令中的 `-p`/`--password` 参数值进行脱敏（替换为 `***`），异常详情仅记录日志不回复给发件人。
+
+11. **邮件大小限制**：默认 1MB，超大邮件直接拒绝，防止 OOM。
+
+12. **重启保护**：自动更新后最多重启 5 次，防止代码错误导致无限重启循环。重启计数使用原子写入。
+
+13. **健康检查**：自动更新后编译检查所有 Python 文件，语法错误时自动回滚。
+
+14. **SMTP 线程安全**：邮件发送器使用 `threading.Lock` 保护连接管理，支持并发安全。
 
 ## 环境变量配置表
 
@@ -117,11 +125,16 @@ your_sudo_password
 | SMTP_OUT_PASS | - | 发件邮箱授权码 |
 | SMTP_OUT_TLS | true | 是否启用TLS |
 | SENDER_NAME | MailCommandBot | 发件人显示名称 |
-| ALLOWED_SENDERS | - | 允许的发件人邮箱（逗号分隔，留空不限制） |
-| ALLOWED_DOMAINS | - | 允许的邮箱域名（逗号分隔，留空不限制） |
+| ALLOWED_SENDERS | - | 允许的发件人邮箱（逗号分隔，留空时强制绑定127.0.0.1） |
+| ALLOWED_DOMAINS | - | 允许的邮箱域名（逗号分隔，留空时强制绑定127.0.0.1） |
+| ALLOWED_CLIENT_IPS | - | 允许连接的客户端IP（逗号分隔，留空不限制） |
+| REQUIRE_WHITELIST | true | 未配置白名单时是否强制绑定127.0.0.1 |
+| SUDO_NOPASSWD | false | 是否使用sudoers NOPASSWD模式（建议启用，避免邮件传输密码） |
+| RATE_LIMIT_PER_MINUTE | 10 | 每个发件人每分钟最多命令邮件数 |
 | CMD_TIMEOUT | 30 | 命令执行超时（秒） |
 | CMD_MAX_OUTPUT | 50000 | 命令输出最大长度（字符） |
-| MAX_EMAIL_SIZE | 10485760 | 单封邮件最大字节数（默认10MB） |
+| MAX_EMAIL_SIZE | 1048576 | 单封邮件最大字节数（默认1MB） |
+| SMTP_KEEPALIVE_INTERVAL | 60 | SMTP连接心跳保活间隔（秒，0禁用） |
 | GITHUB_REPO | - | GitHub仓库（用于自动更新） |
 | GITHUB_TOKEN | - | GitHub Token（用于API认证） |
 | UPDATE_BRANCH | main | 更新分支 |

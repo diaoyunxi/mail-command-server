@@ -8,12 +8,70 @@
 import email
 import email.policy
 from email.message import EmailMessage
+from html.parser import HTMLParser
 from typing import Tuple
 import re
 import html as html_module
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# ==================== 预编译正则表达式 ====================
+# 签名分隔线
+_RE_SIGNATURE_SEPARATOR = re.compile(r"^--\s*$")
+# 邮件头残留
+_RE_MAIL_HEADER = re.compile(
+    r"^(From|To|Subject|Date|Message-ID|Received|Mime-Version|Content-Type|Content-Transfer-Encoding|DKIM-Signature|X-[^:]+):\s",
+    re.IGNORECASE
+)
+# 引用原文标记
+_RE_QUOTED_ORIGINAL = re.compile(
+    r"^(On .+ wrote:|在 .+ 写道：|-----Original Message-----|Sent from my )",
+    re.IGNORECASE
+)
+
+
+class _HTMLToTextParser(HTMLParser):
+    """
+    HTML 转文本解析器（基于标准库 html.parser）
+    将 HTML 标签转换为纯文本，处理换行、列表等常见元素
+    """
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._result = []
+        self._skip = False
+
+    def handle_starttag(self, tag, attrs):
+        """处理开始标签"""
+        if tag in ("script", "style", "head"):
+            self._skip = True
+        elif tag == "br":
+            self._result.append("\n")
+        elif tag == "li":
+            self._result.append("\n- ")
+        elif tag in ("p", "div", "tr", "h1", "h2", "h3", "h4", "h5", "h6"):
+            self._result.append("\n")
+
+    def handle_endtag(self, tag):
+        """处理结束标签"""
+        if tag in ("script", "style", "head"):
+            self._skip = False
+        elif tag in ("p", "div", "tr", "h1", "h2", "h3", "h4", "h5", "h6"):
+            self._result.append("\n")
+
+    def handle_data(self, data):
+        """处理文本内容"""
+        if not self._skip:
+            self._result.append(data)
+
+    def get_text(self) -> str:
+        """获取转换后的纯文本"""
+        text = "".join(self._result)
+        # 对 HTML 实体进行反转义
+        text = html_module.unescape(text)
+        return text
 
 
 class EmailParser:
@@ -84,13 +142,18 @@ class EmailParser:
 
     @staticmethod
     def _html_to_text(html: str) -> str:
-        """简单HTML转文本"""
-        text = re.sub(r"<br\s*/?>", "\n", html, flags=re.IGNORECASE)
-        text = re.sub(r"</p>", "\n", text, flags=re.IGNORECASE)
-        text = re.sub(r"<li>", "\n- ", text, flags=re.IGNORECASE)
-        text = re.sub(r"<[^>]+>", "", text)
-        text = html_module.unescape(text)
-        return text
+        """
+        将 HTML 转换为纯文本（基于标准库 html.parser，替代正则表达式）
+        处理换行、列表、段落等常见 HTML 元素，跳过 script/style/head 标签
+        Args:
+            html: HTML 字符串
+        Returns:
+            转换后的纯文本
+        """
+        parser = _HTMLToTextParser()
+        parser.feed(html)
+        parser.close()
+        return parser.get_text()
 
     @staticmethod
     def _clean_body(body: str) -> str:
@@ -110,7 +173,7 @@ class EmailParser:
                 continue
 
             # 签名分隔线
-            if re.match(r"^--\s*$", stripped):
+            if _RE_SIGNATURE_SEPARATOR.match(stripped):
                 in_signature = True
                 continue
             if in_signature:
@@ -121,11 +184,11 @@ class EmailParser:
                 continue
 
             # 邮件头残留
-            if re.match(r"^(From|To|Subject|Date|Message-ID|Received|Mime-Version|Content-Type|Content-Transfer-Encoding|DKIM-Signature|X-[^:]+):\s", stripped, re.IGNORECASE):
+            if _RE_MAIL_HEADER.match(stripped):
                 continue
 
             # 引用原文标记
-            if re.match(r"^(On .+ wrote:|在 .+ 写道：|-----Original Message-----|Sent from my )", stripped, re.IGNORECASE):
+            if _RE_QUOTED_ORIGINAL.match(stripped):
                 break
 
             cleaned_lines.append(line)

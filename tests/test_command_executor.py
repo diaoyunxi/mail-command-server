@@ -125,7 +125,7 @@ class TestCommandExecutorValidate:
 
     def test_command_at_max_length(self):
         """4096字符以内的命令应被允许"""
-        cmd = "echo " + "a" * 4000
+        cmd = "ls " + "a" * 4000
         allowed, reason = CommandExecutor.validate(cmd)
         assert allowed is True
 
@@ -145,9 +145,9 @@ class TestCommandExecutorExecute:
 
     def test_safe_command_execution(self):
         """安全命令应成功执行"""
-        rc, stdout, stderr = CommandExecutor.execute("echo hello")
+        rc, stdout, stderr = CommandExecutor.execute("whoami")
         assert rc == 0
-        assert "hello" in stdout
+        assert len(stdout.strip()) > 0
 
     def test_blocked_command_not_executed(self):
         """被阻止的命令不应执行"""
@@ -156,10 +156,10 @@ class TestCommandExecutorExecute:
         assert "被拒绝" in stderr
 
     def test_nonexistent_command(self):
-        """不存在的命令应返回错误"""
+        """不在白名单中的命令应被拒绝"""
         rc, stdout, stderr = CommandExecutor.execute("nonexistent_command_xyz_123")
         assert rc == -1
-        assert "找不到命令" in stderr
+        assert "被拒绝" in stderr
 
     def test_sudo_without_password(self):
         """sudo 无密码应尝试执行（可能因无 tty 失败，但不崩溃）"""
@@ -204,10 +204,9 @@ class TestCommandExecutorFormatResult:
     """CommandExecutor.format_result() 格式化测试"""
 
     def test_format_with_output(self):
-        rc, stdout, stderr = CommandExecutor.execute("echo test_format")
-        result = CommandExecutor.format_result(rc, stdout, stderr, "echo test_format")
-        assert "echo test_format" in result
-        assert "test_format" in result
+        rc, stdout, stderr = CommandExecutor.execute("id")
+        result = CommandExecutor.format_result(rc, stdout, stderr, "id")
+        assert "id" in result
         assert "返回码: 0" in result
 
     def test_format_sudo_with_password(self):

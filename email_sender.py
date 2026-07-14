@@ -10,6 +10,7 @@ import smtplib
 import socket
 import re
 import logging
+import threading
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
@@ -34,35 +35,43 @@ class EmailSender:
         self.sender_name = config.SENDER_NAME
         # 连接复用：缓存 SMTP 连接
         self._server = None
+        # 线程安全锁：保护 _get_connection 和 _close_connection 的并发访问
+        self._lock = threading.Lock()
+        # 心跳保活间隔（秒），0 表示禁用
+        self._keepalive_interval = config.SMTP_KEEPALIVE_INTERVAL
 
     def _get_connection(self) -> smtplib.SMTP:
         """
         获取 SMTP 连接（复用已有连接或创建新连接）
+        使用 threading.Lock 保证线程安全
         Returns:
             可用的 SMTP 连接对象
         """
-        # 尝试复用已有连接
-        if self._server is not None:
-            try:
-                # 发送 NOOP 命令检查连接是否存活
-                code, msg = self._server.noop()
-                if code == 250:
-                    return self._server
-            except Exception:
-                pass
-            # 连接已失效，关闭并重建
-            self._close_connection()
+        with self._lock:
+            # 尝试复用已有连接
+            if self._server is not None:
+                try:
+                    # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
+                    code, msg = self._server.noop()
+                    if code == 250:
+                        return self._server
+                except Exception:
+                    pass
+                # 连接已失效，关闭并重建
+                self._close_connection_locked()
 
-        # 创建新连接
-        self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
-        if self.use_tls:
-            self._server.starttls()
-        if self.user and self.password:
-            self._server.login(self.user, self.password)
-        return self._server
+            # 创建新连接
+            self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            if self.use_tls:
+                self._server.starttls()
+            if self.user and self.password:
+                self._server.login(self.user, self.password)
+            return self._server
 
-    def _close_connection(self) -> None:
-        """安全关闭 SMTP 连接"""
+    def _close_connection_locked(self) -> None:
+        """
+        安全关闭 SMTP 连接（内部方法，调用方需已持有锁）
+        """
         if self._server is not None:
             try:
                 self._server.quit()
@@ -73,6 +82,11 @@ class EmailSender:
                     pass
             finally:
                 self._server = None
+
+    def _close_connection(self) -> None:
+        """安全关闭 SMTP 连接（线程安全）"""
+        with self._lock:
+            self._close_connection_locked()
 
     def send_reply(self, to_addr: str, subject: str, body: str, original_subject: str = "") -> bool:
         """
