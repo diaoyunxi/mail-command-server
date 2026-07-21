@@ -46,10 +46,36 @@ def _get_str_env(key: str, default: str) -> str:
     return os.getenv(key, default) or default
 
 
+# ==================== 接收模式配置 ====================
+# 邮件接收模式: smtp(自建服务器) / pop3 / imap
+RECEIVE_MODE = _get_str_env("RECEIVE_MODE", "smtp")
+
 # ==================== 服务器配置 ====================
-# 本地SMTP接收服务器监听地址和端口
+# 本地SMTP接收服务器监听地址和端口（smtp 模式下使用）
 SMTP_BIND_HOST = _get_str_env("SMTP_BIND_HOST", "0.0.0.0")
 SMTP_BIND_PORT = _get_int_env("SMTP_BIND_PORT", 9930, min_val=1, max_val=65535)
+
+# ==================== 已有邮件服务器配置（pop3/imap 模式使用） ====================
+# 收件服务器地址
+MAIL_IN_HOST = _get_str_env("MAIL_IN_HOST", "")
+# 收件协议: pop3 / imap
+MAIL_IN_PROTOCOL = _get_str_env("MAIL_IN_PROTOCOL", "pop3")
+# 是否启用 TLS/SSL
+MAIL_IN_TLS = os.getenv("MAIL_IN_TLS", "true").lower() == "true"
+
+
+def _get_default_mail_in_port() -> int:
+    """根据协议和 TLS 设置返回默认端口"""
+    if MAIL_IN_PROTOCOL.lower() == "imap":
+        return 993 if MAIL_IN_TLS else 143
+    return 995 if MAIL_IN_TLS else 110
+
+
+MAIL_IN_PORT = _get_int_env("MAIL_IN_PORT", _get_default_mail_in_port(), min_val=1, max_val=65535)
+MAIL_IN_USER = _get_str_env("MAIL_IN_USER", "")          # 收件邮箱账号
+MAIL_IN_PASS = _get_str_env("MAIL_IN_PASS", "")          # 收件邮箱密码/授权码
+MAIL_POLL_INTERVAL = _get_int_env("MAIL_POLL_INTERVAL", 10, min_val=1, max_val=3600)  # 轮询间隔（秒）
+MAIL_INBOX_FOLDER = _get_str_env("MAIL_INBOX_FOLDER", "INBOX")  # IMAP 收件箱文件夹
 
 # ==================== 邮件发送配置 ====================
 # 用于回复邮件的SMTP服务器（需配置为实际可用的外发SMTP）
