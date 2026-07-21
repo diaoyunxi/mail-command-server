@@ -14,14 +14,13 @@
 使用方法：
     python main.py
 
-环境变量配置（可选）：
-    RECEIVE_MODE        接收模式: smtp / pop3 / imap，默认 smtp
+配置方式：
+    编辑项目根目录的 .env 文件（首次启动自动生成模板）
 
-    --- SMTP 自建服务器模式 ---
+配置项：
+    RECEIVE_MODE        接收模式: smtp / pop3 / imap，默认 smtp
     SMTP_BIND_HOST      接收服务器绑定地址，默认 0.0.0.0
     SMTP_BIND_PORT      接收服务器端口，默认 9930
-
-    --- POP3/IMAP 拉取模式 ---
     MAIL_IN_HOST        收件服务器地址（如 pop.qq.com / imap.qq.com）
     MAIL_IN_PORT        收件服务器端口（默认根据协议自动选择）
     MAIL_IN_USER        收件邮箱账号
@@ -30,8 +29,6 @@
     MAIL_IN_TLS         是否启用TLS，默认 true
     MAIL_POLL_INTERVAL  轮询间隔（秒），默认 10
     MAIL_INBOX_FOLDER   IMAP收件箱文件夹，默认 INBOX
-
-    --- 邮件发送配置（所有模式共用） ---
     SMTP_OUT_HOST       外发SMTP服务器，默认 smtp.qq.com
     SMTP_OUT_PORT       外发SMTP端口，默认 587
     SMTP_OUT_TIMEOUT    外发SMTP超时时间（秒），默认 30
@@ -39,8 +36,6 @@
     SMTP_OUT_PASS       发件邮箱授权码/密码
     SMTP_OUT_TLS        是否启用TLS，默认 true
     SENDER_NAME         发件人显示名称
-
-    --- 安全配置 ---
     ALLOWED_SENDERS     允许的发件人邮箱，逗号分隔
     ALLOWED_DOMAINS     允许的邮箱域名，逗号分隔
     CMD_TIMEOUT         命令执行超时（秒），默认 30

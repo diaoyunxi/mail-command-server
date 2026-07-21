@@ -38,36 +38,34 @@ mail-command-server/
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
+### 2. 配置
 
-**公共配置（所有模式必须）**
+首次启动时会**自动生成** `.env` 模板文件，位于项目根目录。直接编辑即可：
 
 ```bash
-# 外发SMTP配置（用于发送回复邮件）
-export SMTP_OUT_USER="your_email@qq.com"
-export SMTP_OUT_PASS="your_auth_code"
-
-# 安全配置（强烈建议）
-export ALLOWED_SENDERS="trusted@example.com,admin@example.com"
-# 或按域名白名单
-export ALLOWED_DOMAINS="example.com,company.org"
+# 编辑 .env 文件，按需修改配置
+vim .env
 ```
+
+修改后重启服务生效。
 
 **模式一：自建 SMTP 服务器（默认）**
 
-无需额外配置，直接启动即可在 `0.0.0.0:9930` 监听邮件。
+`.env` 中默认已启用 SMTP 模式，无需额外配置，直接启动即可在 `0.0.0.0:9930` 监听邮件。
 
 **模式二：使用已有邮件服务器（POP3/IMAP）**
 
-```bash
+编辑 `.env` 文件：
+
+```ini
 # 切换到 POP3 或 IMAP 模式
-export RECEIVE_MODE="imap"          # 或 pop3
+RECEIVE_MODE=imap
 
 # 配置收件服务器
-export MAIL_IN_HOST="imap.qq.com"   # POP3示例: pop.qq.com
-export MAIL_IN_USER="your_email@qq.com"
-export MAIL_IN_PASS="your_auth_code"
-# MAIL_IN_PORT 会根据协议和 TLS 自动选择默认值（IMAP:993, POP3:995）
+MAIL_IN_HOST=imap.qq.com
+MAIL_IN_USER=your_email@qq.com
+MAIL_IN_PASS=your_auth_code
+# MAIL_IN_PORT 留空会根据协议和 TLS 自动选择
 ```
 
 ### 3. 启动服务
@@ -159,7 +157,9 @@ your_sudo_password
 
 14. **SMTP 线程安全**：邮件发送器使用 `threading.Lock` 保护连接管理，支持并发安全。
 
-## 环境变量配置表
+## 配置项说明表
+
+以下配置通过项目根目录的 `.env` 文件设置（首次启动自动生成模板）。
 
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
