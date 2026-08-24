@@ -174,43 +174,37 @@ class MailCommandHandler:
             # 解析邮件
             from_addr, to_addr, subject, cleaned_body = EmailParser.parse(raw_data)
 
-            # 提取命令和密码
-            cmd, password = EmailParser.extract_command_and_password(cleaned_body)
+            # 提取所有命令（列表格式）
+            commands = EmailParser.extract_commands(cleaned_body)
 
-            if not cmd:
-                logger.info("邮件正文中未找到以 @ 开头的命令")
-                await loop.run_in_executor(
-                    None,
-                    self.sender.send_reply,
-                    from_addr,
-                    "未检测到命令",
-                    f"收到您的邮件，但未在正文中找到以 '@' 开头的命令行。\n\n"
-                    f"请在邮件正文单独一行输入命令，例如：\n@ls -la\n\n"
-                    f"如需 sudo，请在第二行提供密码：\n@sudo ls /root\nmy_password\n\n"
-                    f"也可使用命令模板：\n@template:disk\n\n"
-                    f"您的原始正文:\n{cleaned_body[:500]}",
-                    subject,
-                )
+            if not commands:
+                # 没有有效命令，不回复任何邮件
+                logger.info("邮件正文未以 @ 开头，不执行任何命令")
                 return "250 Message accepted for delivery"
 
-            # 日志记录脱敏后的命令和密码状态
-            logger.info("提取到命令: %s, sudo密码: %s", cmd, "已提供" if password else "未提供")
-
-            # 如果启用了 NOPASSWD 模式，忽略邮件中的密码
-            if config.SUDO_NOPASSWD and password:
+            # NOPASSWD 模式：忽略邮件中的所有密码
+            if config.SUDO_NOPASSWD:
                 logger.info("已启用 sudoers NOPASSWD 模式，忽略邮件中提供的密码")
-                password = ""
+                commands = [(cmd, "") for cmd, _ in commands]
 
-            # 执行命令
-            rc, stdout, stderr = CommandExecutor.execute(cmd, password)
-            result = CommandExecutor.format_result(rc, stdout, stderr, cmd, bool(password))
+            # 依次执行所有命令
+            all_results = []
+            executed_count = 0
+            for idx, (cmd, password) in enumerate(commands, 1):
+                logger.info("执行命令 [%d/%d]: %s", idx, len(commands), cmd)
+                rc, stdout, stderr = await loop.run_in_executor(
+                    None, CommandExecutor.execute, cmd, password
+                )
+                result = CommandExecutor.format_result(rc, stdout, stderr, cmd, bool(password))
+                all_results.append(f"--- 命令 {idx}: {cmd} ---\n{result}")
+                executed_count += 1
 
             # 构造回复内容
             reply_body = (
                 f"您好，\n\n"
-                f"已收到您的命令请求，执行结果如下：\n\n"
-                f"{result}\n\n"
-                f"---\n"
+                f"已收到您的命令请求，共执行 {executed_count} 条命令，结果如下：\n\n"
+                + "\n".join(all_results) +
+                f"\n\n---\n"
                 f"本邮件由 MailCommandBot 自动发送\n"
             )
 

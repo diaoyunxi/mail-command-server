@@ -9,7 +9,7 @@ import email
 import email.policy
 from email.message import EmailMessage
 from html.parser import HTMLParser
-from typing import Tuple
+from typing import List, Tuple
 import re
 import html as html_module
 import logging
@@ -202,35 +202,57 @@ class EmailParser:
         return "\n".join(cleaned_lines)
 
     @staticmethod
-    def extract_command_and_password(body: str) -> Tuple[str, str]:
+    def extract_commands(body: str) -> List[Tuple[str, str]]:
         """
-        从清洗后的正文中提取以 @ 开头的命令及其后的密码
-        返回 (cmd, password)
-        - cmd: 去掉 @ 后的命令行
-        - password: 如果命令以 'sudo ' 开头，取命令行之后的第一个非空行作为密码；否则为空
+        从清洗后的正文中提取所有以 @ 开头的命令及其后的密码
+
+        规则：
+        - 正文必须第一行以 @ 开头，否则不执行任何命令
+        - 允许多个 @ 命令，依次执行
+        - 返回命令列表：[(cmd1, password1), (cmd2, password2), ...]
+
+        Args:
+            body: 清洗后的邮件正文
+
+        Returns:
+            命令列表，格式为 [(命令, 密码), ...]
+            如果正文不以 @ 开头或没有有效命令，返回空列表
         """
         lines = body.splitlines()
-        cmd = ""
-        password = ""
-        cmd_index = -1
+        if not lines:
+            return []
 
-        # 找到第一个以 @ 开头的行
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if stripped.startswith("@"):
-                cmd = stripped[1:].strip()
-                cmd_index = i
-                break
+        # 第一行必须是以 @ 开头的命令
+        first_line = lines[0].strip()
+        if not first_line.startswith("@"):
+            return []
 
-        if not cmd:
-            return "", ""
+        commands = []
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
 
-        # 如果命令以 sudo 开头，提取后面的密码行
-        if cmd.lower().startswith("sudo "):
-            for j in range(cmd_index + 1, len(lines)):
-                pwd = lines[j].strip()
-                if pwd:
-                    password = pwd
-                    break
+            # 找到以 @ 开头的命令行
+            if line.startswith("@"):
+                cmd = line[1:].strip()
+                if not cmd:  # @ 后无内容，跳过
+                    i += 1
+                    continue
 
-        return cmd, password
+                # 提取命令
+                commands.append((cmd, ""))
+
+                # 如果命令以 sudo 开头，提取下一行的密码
+                if cmd.lower().startswith("sudo "):
+                    i += 1
+                    while i < len(lines) and not lines[i].strip().startswith("@"):
+                        pwd = lines[i].strip()
+                        if pwd:
+                            commands[-1] = (commands[-1][0], pwd)
+                            break
+                        i += 1
+                i += 1
+            else:
+                i += 1
+
+        return commands

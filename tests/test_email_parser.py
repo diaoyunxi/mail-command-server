@@ -14,86 +14,63 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from email_parser import EmailParser
 
 
-class TestExtractCommandAndPassword:
-    """EmailParser.extract_command_and_password() 测试"""
+class TestExtractCommands:
+    """EmailParser.extract_commands() 测试"""
 
     def test_simple_command(self):
         """提取简单命令"""
-        cmd, password = EmailParser.extract_command_and_password("@ls -la")
-        assert cmd == "ls -la"
-        assert password == ""
+        commands = EmailParser.extract_commands("@ls -la")
+        assert commands == [("ls -la", "")]
 
-    def test_command_with_leading_at(self):
-        """以 @ 开头的行应被识别为命令"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "你好\n@df -h\n再见"
-        )
-        assert cmd == "df -h"
-        assert password == ""
+    def test_first_line_must_be_at(self):
+        """第一行必须是以 @ 开头的命令"""
+        commands = EmailParser.extract_commands("你好\n@df -h\n再见")
+        assert commands == []
+
+    def test_multiple_commands(self):
+        """多个 @ 命令应全部提取"""
+        commands = EmailParser.extract_commands("@ls -la\n@df -h\n@whoami")
+        assert commands == [("ls -la", ""), ("df -h", ""), ("whoami", "")]
 
     def test_sudo_command_with_password(self):
         """sudo 命令应提取下一行的密码"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "@sudo ls /root\nmy_secret_password\n"
-        )
-        assert cmd == "sudo ls /root"
-        assert password == "my_secret_password"
+        commands = EmailParser.extract_commands("@sudo ls /root\nmy_secret_password")
+        assert commands == [("sudo ls /root", "my_secret_password")]
 
     def test_sudo_command_password_with_blank_line(self):
         """密码前有空行时应跳过空行"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "@sudo cat /etc/passwd\n\nmy_password\n"
-        )
-        assert cmd == "sudo cat /etc/passwd"
-        assert password == "my_password"
+        commands = EmailParser.extract_commands("@sudo cat /etc/passwd\n\nmy_password")
+        assert commands == [("sudo cat /etc/passwd", "my_password")]
 
     def test_no_command(self):
-        """无 @ 前缀时返回空"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "这是一封普通邮件\n没有命令"
-        )
-        assert cmd == ""
-        assert password == ""
+        """无 @ 前缀时返回空列表"""
+        commands = EmailParser.extract_commands("这是一封普通邮件\n没有命令")
+        assert commands == []
 
     def test_empty_body(self):
-        """空正文返回空"""
-        cmd, password = EmailParser.extract_command_and_password("")
-        assert cmd == ""
-        assert password == ""
+        """空正文返回空列表"""
+        commands = EmailParser.extract_commands("")
+        assert commands == []
 
     def test_non_sudo_command_no_password(self):
         """非 sudo 命令不提取密码"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "@whoami\nsome_text\n"
-        )
-        assert cmd == "whoami"
-        assert password == ""
+        commands = EmailParser.extract_commands("@whoami\nsome_text")
+        assert commands == [("whoami", "")]
 
     def test_only_at_sign(self):
         """只有 @ 无后续内容"""
-        cmd, password = EmailParser.extract_command_and_password("@")
-        assert cmd == ""
+        commands = EmailParser.extract_commands("@")
+        assert commands == []
 
     def test_at_with_spaces_only(self):
         """@ 后只有空格"""
-        cmd, password = EmailParser.extract_command_and_password("@   ")
-        assert cmd == ""
+        commands = EmailParser.extract_commands("@   ")
+        assert commands == []
 
-    def test_first_command_taken(self):
-        """仅提取第一个 @ 命令"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "@echo hello\n@ls -la\n"
-        )
-        assert cmd == "echo hello"
-
-    def test_command_after_signature(self):
-        """签名后的命令不应被提取（但当前实现不区分签名区域，这是预期行为）"""
-        cmd, password = EmailParser.extract_command_and_password(
-            "正文内容\n--\n签名\n@ls"
-        )
-        # 当前实现会提取签名后的命令（extract_command 不区分签名区域）
-        # 这个测试记录当前行为
-        assert cmd == "ls"
+    def test_multiple_sudo_commands(self):
+        """多个 sudo 命令各自提取密码"""
+        commands = EmailParser.extract_commands("@sudo ls /root\npass1\n@sudo cat /etc/hosts\npass2")
+        assert commands == [("sudo ls /root", "pass1"), ("sudo cat /etc/hosts", "pass2")]
 
 
 class TestCleanBody:
@@ -173,6 +150,5 @@ class TestParseEmail:
             b"my_sudo_password\r\n"
         )
         from_addr, to_addr, subject, body = EmailParser.parse(raw)
-        cmd, password = EmailParser.extract_command_and_password(body)
-        assert cmd == "sudo ls /root"
-        assert password == "my_sudo_password"
+        commands = EmailParser.extract_commands(body)
+        assert commands == [("sudo ls /root", "my_sudo_password")]
