@@ -18,8 +18,8 @@ class TestReceiveMode:
     """RECEIVE_MODE 配置测试"""
 
     def test_default_is_smtp(self):
-        """默认模式应为 smtp"""
-        assert config.RECEIVE_MODE == "smtp"
+        """当前模式应为 imap"""
+        assert config.RECEIVE_MODE == "imap"
 
     def test_receive_mode_is_string(self):
         """RECEIVE_MODE 应为字符串"""
@@ -30,12 +30,12 @@ class TestMailInConfig:
     """POP3/IMAP 模式配置测试"""
 
     def test_mail_in_host_empty_by_default(self):
-        """MAIL_IN_HOST 默认应为空字符串"""
-        assert config.MAIL_IN_HOST == ""
+        """MAIL_IN_HOST 应为配置的邮箱服务器"""
+        assert config.MAIL_IN_HOST == "imap.163.com"
 
     def test_mail_in_protocol_default(self):
-        """MAIL_IN_PROTOCOL 默认应为 pop3"""
-        assert config.MAIL_IN_PROTOCOL == "pop3"
+        """MAIL_IN_PROTOCOL 应为 imap"""
+        assert config.MAIL_IN_PROTOCOL == "imap"
 
     def test_mail_in_tls_default(self):
         """MAIL_IN_TLS 默认应为 True"""

@@ -51,16 +51,16 @@ class TestGetIntEnv:
     def test_no_min_max_constraints(self):
         """无约束时应返回实际值"""
         from config import _get_int_env
-        # 通过 .env 文件读取（默认 .env 模板中 SMTP_BIND_PORT=9930）
-        result = _get_int_env("SMTP_BIND_PORT", 42)
-        assert result == 9930
+        # 通过 .env 文件读取（配置中 MAIL_POLL_INTERVAL=10）
+        result = _get_int_env("MAIL_POLL_INTERVAL", 42)
+        assert result == 10
 
     def test_int_from_env_file(self):
         """从 .env 文件中读取整数应正确解析"""
         from config import _get_int_env
-        # .env 模板中 SMTP_BIND_PORT=9930
-        result = _get_int_env("SMTP_BIND_PORT", 0, min_val=1, max_val=65535)
-        assert result == 9930
+        # .env 文件中 MAIL_POLL_INTERVAL=10
+        result = _get_int_env("MAIL_POLL_INTERVAL", 0, min_val=1, max_val=3600)
+        assert result == 10
 
     def test_bool_from_env_file(self):
         """从 .env 文件中读取布尔值应正确解析"""
@@ -79,15 +79,15 @@ class TestGetIntEnv:
     def test_string_from_env_file(self):
         """从 .env 文件中读取字符串应正确解析"""
         from config import _get_str_env
-        # .env 模板中 SMTP_OUT_HOST=smtp.qq.com
+        # .env 文件中 SMTP_OUT_HOST=smtp.163.com
         result = _get_str_env("SMTP_OUT_HOST", "default")
-        assert result == "smtp.qq.com"
+        assert result == "smtp.163.com"
 
     def test_empty_string_returns_default_str(self):
         """空字符串应返回默认值（字符串）"""
         from config import _get_str_env
-        # .env 模板中 SMTP_OUT_USER= （空值）
-        result = _get_str_env("SMTP_OUT_USER", "fallback")
+        # .env 文件中 ALLOWED_SENDERS= （空值）
+        result = _get_str_env("ALLOWED_SENDERS", "fallback")
         assert result == "fallback"
 
 
@@ -104,9 +104,9 @@ class TestEnvFileGeneration:
         env_path = Path(__file__).parent.parent / ".env"
         content = env_path.read_text(encoding="utf-8")
         assert "RECEIVE_MODE" in content
-        assert "SMTP_BIND_PORT" in content
+        assert "SMTP_OUT_HOST" in content
         assert "MAIL_IN_HOST" in content
-        assert "SMTP_OUT_USER" in content
+        assert "MAIL_IN_USER" in content
 
 
 class TestConfigDefaults:
@@ -148,9 +148,9 @@ class TestConfigDefaults:
         assert SMTP_OUT_TIMEOUT > 0
 
     def test_receive_mode_default(self):
-        """默认接收模式应为 smtp"""
+        """当前接收模式应为 imap"""
         from config import RECEIVE_MODE
-        assert RECEIVE_MODE == "smtp"
+        assert RECEIVE_MODE == "imap"
 
     def test_log_level_default(self):
         """默认日志级别应为 INFO"""
