@@ -300,6 +300,22 @@ class Pop3Receiver:
                     # 处理完成后删除邮件（避免下次重复执行）
                     server.dele(int(idx))
 
+                except poplib.error_proto as e:
+                    # 处理 POP3 协议错误
+                    error_msg = str(e)
+                    if "line too long" in error_msg.lower():
+                        # 邮件内容超长（如包含 Base64 附件），直接删除跳过
+                        logger.warning(
+                            "邮件 uid=%s 内容超长，跳过处理并删除", uid
+                        )
+                        try:
+                            server.dele(int(idx))
+                        except Exception:
+                            pass
+                    else:
+                        # 其他协议错误，记录日志但不删除（保留重试机会）
+                        logger.exception("POP3 协议错误 uid=%s: %s", uid, e)
+
                 except Exception as e:
                     logger.exception("处理 POP3 邮件 uid=%s 失败: %s", uid, e)
 
