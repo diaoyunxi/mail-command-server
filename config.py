@@ -259,8 +259,15 @@ ALLOWED_DOMAINS = _get_str("ALLOWED_DOMAINS", "")
 ALLOWED_CLIENT_IPS = _get_str("ALLOWED_CLIENT_IPS", "")
 REQUIRE_WHITELIST = _get_bool("REQUIRE_WHITELIST", True)
 
-# ==================== sudo 配置 ====================
-SUDO_NOPASSWD = _get_bool("SUDO_NOPASSWD", False)
+# ==================== 安全限制配置 ====================
+# 是否启用命令白名单（false=允许所有命令，true=仅允许白名单中的命令）
+CMD_WHITELIST_ENABLE = _get_bool("CMD_WHITELIST_ENABLE", False)
+# 是否检查危险字符（false=不检查，true=拦截包含管道/重定向等字符的命令）
+CMD_BLOCK_META_ENABLE = _get_bool("CMD_BLOCK_META_ENABLE", False)
+# 是否启用发件人白名单（false=允许所有发件人，true=仅允许白名单中的邮箱）
+SENDER_WHITELIST_ENABLE = _get_bool("SENDER_WHITELIST_ENABLE", False)
+# 是否启用频率限制（false=不限制，true=限制每分钟最多 RATE_LIMIT_PER_MINUTE 封）
+RATE_LIMIT_ENABLE = _get_bool("RATE_LIMIT_ENABLE", False)
 
 # ==================== 频率限制配置 ====================
 RATE_LIMIT_PER_MINUTE = _get_int("RATE_LIMIT_PER_MINUTE", 10, min_val=1, max_val=1000)

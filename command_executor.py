@@ -89,8 +89,8 @@ class CommandExecutor:
         if len(cmd_stripped) > 4096:
             return False, f"命令过长（{len(cmd_stripped)} 字符），最大允许 4096 字符"
 
-        # 禁止 shell 元字符（管道、重定向、命令替换等），防止命令注入
-        if _BLOCKED_META_PATTERN.search(cmd_stripped):
+        # 检查危险字符（可通过配置关闭）
+        if config.CMD_BLOCK_META_ENABLE and _BLOCKED_META_PATTERN.search(cmd_stripped):
             return False, "命令包含危险的特殊字符（管道/重定向/命令替换等），拒绝执行"
 
         # 使用 shlex 解析命令
@@ -121,12 +121,12 @@ class CommandExecutor:
             cmd_name = os.path.basename(parts[0])
             check_start = 1
 
-        # 检查命令是否在白名单中
-        if cmd_name not in ALLOWED_COMMANDS:
+        # 检查命令是否在白名单中（可通过配置关闭）
+        if config.CMD_WHITELIST_ENABLE and cmd_name not in ALLOWED_COMMANDS:
             return False, f"命令 '{cmd_name}' 不在安全白名单中，拒绝执行（危险操作）"
 
-        # 对 find 命令检查危险参数
-        if cmd_name == "find":
+        # 对 find 命令检查危险参数（可通过配置关闭）
+        if cmd_name == "find" and config.CMD_WHITELIST_ENABLE:
             for arg in parts[check_start:]:
                 if arg in FIND_DANGEROUS_ARGS:
                     return False, f"find 命令不允许使用危险参数 {arg}（-delete/-exec 等）"
