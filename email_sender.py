@@ -61,9 +61,13 @@ class EmailSender:
                 self._close_connection_locked()
 
             # 创建新连接
-            self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
             if self.use_tls:
+                # 587 端口使用 STARTTLS
+                self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
                 self._server.starttls()
+            else:
+                # 465 端口使用 SSL
+                self._server = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
             if self.user and self.password:
                 self._server.login(self.user, self.password)
             return self._server

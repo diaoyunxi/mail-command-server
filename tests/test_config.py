@@ -148,9 +148,9 @@ class TestConfigDefaults:
         assert SMTP_OUT_TIMEOUT > 0
 
     def test_receive_mode_default(self):
-        """当前接收模式应为 imap"""
+        """当前接收模式应为 pop3"""
         from config import RECEIVE_MODE
-        assert RECEIVE_MODE == "imap"
+        assert RECEIVE_MODE == "pop3"
 
     def test_log_level_default(self):
         """默认日志级别应为 INFO"""
