@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 邮件接收模块（POP3/IMAP 模式）
 通过已有邮件服务器的 POP3 或 IMAP 协议主动拉取邮件，
@@ -12,20 +11,18 @@
 此模式无需自建 SMTP 接收服务器，适合无法开放端口或不想配置 MX 记录的场景。
 """
 
-import os
-import time
-import logging
-import threading
 import collections
-import poplib
-import imaplib
 import email
 import email.policy
-from typing import List, Optional
+import imaplib
+import logging
+import poplib
+import threading
+import time
 
 import config
-from email_parser import EmailParser
 from command_executor import CommandExecutor
+from email_parser import EmailParser
 from email_sender import EmailSender
 
 logger = logging.getLogger(__name__)
@@ -98,7 +95,7 @@ class MailProcessor:
         self.sender = EmailSender()
         self.rate_limiter = RateLimiter(config.RATE_LIMIT_PER_MINUTE)
 
-    def process(self, raw_data: bytes, mail_from: str, rcpt_tos: List[str]) -> bool:
+    def process(self, raw_data: bytes, mail_from: str, rcpt_tos: list[str]) -> bool:
         """
         处理单封邮件
 
@@ -160,8 +157,8 @@ class MailProcessor:
                 f"您好，\n\n"
                 f"已收到您的命令请求，共执行 {executed_count} 条命令，结果如下：\n\n"
                 + "\n".join(all_results) +
-                f"\n\n---\n"
-                f"本邮件由 MailCommandBot 自动发送\n"
+                "\n\n---\n"
+                "本邮件由 MailCommandBot 自动发送\n"
             )
 
             success = self.sender.send_reply(from_addr, "命令执行结果", reply_body, subject)
@@ -202,7 +199,7 @@ class Pop3Receiver:
         self.poll_interval = config.MAIL_POLL_INTERVAL
         self.processor = MailProcessor()
         self._stop_event = threading.Event()
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
 
     def start(self) -> None:
         """启动后台轮询线程"""
@@ -235,7 +232,7 @@ class Pop3Receiver:
             logger.error("POP3 账号或密码未配置")
             return
 
-        server: Optional[poplib.POP3] = None
+        server: poplib.POP3 | None = None
         try:
             if self.use_tls:
                 server = poplib.POP3_SSL(self.host, self.port, timeout=30)
@@ -353,7 +350,7 @@ class ImapReceiver:
         self.inbox_folder = config.MAIL_INBOX_FOLDER
         self.processor = MailProcessor()
         self._stop_event = threading.Event()
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
 
     def start(self) -> None:
         """启动后台轮询线程"""
@@ -386,7 +383,7 @@ class ImapReceiver:
             logger.error("IMAP 账号或密码未配置")
             return
 
-        server: Optional[imaplib.IMAP4] = None
+        server: imaplib.IMAP4 | None = None
         try:
             if self.use_tls:
                 server = imaplib.IMAP4_SSL(self.host, self.port)

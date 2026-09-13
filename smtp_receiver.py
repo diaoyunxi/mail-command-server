@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 SMTP接收服务器模块
 使用 aiosmtpd 在本地端口接收邮件，解析后执行命令并回复
@@ -7,14 +6,16 @@ SMTP接收服务器模块
 """
 
 import asyncio
-import time
-import logging
 import collections
+import logging
+import time
+
 from aiosmtpd.controller import Controller
-from email_parser import EmailParser
-from command_executor import CommandExecutor
-from email_sender import EmailSender
+
 import config
+from command_executor import CommandExecutor
+from email_parser import EmailParser
+from email_sender import EmailSender
 
 logger = logging.getLogger(__name__)
 
@@ -204,8 +205,8 @@ class MailCommandHandler:
                 f"您好，\n\n"
                 f"已收到您的命令请求，共执行 {executed_count} 条命令，结果如下：\n\n"
                 + "\n".join(all_results) +
-                f"\n\n---\n"
-                f"本邮件由 MailCommandBot 自动发送\n"
+                "\n\n---\n"
+                "本邮件由 MailCommandBot 自动发送\n"
             )
 
             # 通过线程池发送邮件，避免阻塞事件循环

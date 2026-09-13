@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 命令执行模块
 执行以 @ 开头的 Linux 命令，支持 sudo 密码传入
@@ -7,13 +6,13 @@
 包含敏感信息脱敏、命令模板、输出大小限制等安全机制
 """
 
+import logging
 import os
 import re
 import shlex
 import signal
 import subprocess
-import logging
-from typing import Tuple, Optional
+
 import config
 
 logger = logging.getLogger(__name__)
@@ -72,7 +71,7 @@ class CommandExecutor:
     """命令执行器：执行 shell 命令并返回输出，内置白名单安全校验"""
 
     @staticmethod
-    def validate(cmd: str) -> Tuple[bool, str]:
+    def validate(cmd: str) -> tuple[bool, str]:
         """
         校验命令是否允许执行（白名单 + 空值检查 + 长度检查 + 元字符检查）
         Args:
@@ -134,7 +133,7 @@ class CommandExecutor:
         return True, ""
 
     @staticmethod
-    def resolve_template(cmd: str) -> Optional[str]:
+    def resolve_template(cmd: str) -> str | None:
         """
         解析命令模板引用，格式为 template:名称
         Args:
@@ -151,7 +150,7 @@ class CommandExecutor:
         return None
 
     @staticmethod
-    def execute(cmd: str, password: str = "") -> Tuple[int, str, str]:
+    def execute(cmd: str, password: str = "") -> tuple[int, str, str]:
         """
         安全执行命令并返回结果
         使用 shlex.split + subprocess.Popen(shell=False) 杜绝命令注入
@@ -239,17 +238,17 @@ class CommandExecutor:
             return -1, "", f"[命令执行失败] 找不到命令: {cmd_parts[0] if cmd_parts else cmd}"
         except PermissionError:
             logger.error("权限不足: %s", _sanitize_cmd(cmd))
-            return -1, "", f"[命令执行失败] 权限不足，请使用 sudo"
+            return -1, "", "[命令执行失败] 权限不足，请使用 sudo"
         except ValueError as e:
             # 更具体的异常捕获：参数值错误
             logger.error("命令参数错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行失败] 参数错误: {str(e)}"
+            return -1, "", f"[命令执行失败] 参数错误: {e!s}"
         except OSError as e:
             logger.error("命令执行系统错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行系统错误] {str(e)}"
+            return -1, "", f"[命令执行系统错误] {e!s}"
         except Exception as e:
             logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行异常] {str(e)}"
+            return -1, "", f"[命令执行异常] {e!s}"
 
         # 截断过长输出
         stdout = CommandExecutor._truncate(stdout)

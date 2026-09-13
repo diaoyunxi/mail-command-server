@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 配置文件模块
 仅从项目根目录的 .env 文件读取配置，不使用环境变量
@@ -10,6 +9,7 @@
 
 import logging
 from pathlib import Path
+
 from dotenv import dotenv_values
 
 logger = logging.getLogger(__name__)
