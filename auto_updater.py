@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 自动更新模块
 启动时检查GitHub仓库是否有新版本，如有则拉取更新并重启
 包含分支名校验、GitHub Token认证、健康检查和重启次数限制
 """
 
+import glob
+import json
+import logging
 import os
 import re
-import sys
-import glob
 import subprocess
-import logging
-import json
-import urllib.request
-import urllib.error
+import sys
 import time
+import urllib.error
+import urllib.request
 
 import config
 
@@ -248,7 +247,7 @@ class AutoUpdater:
             if os.path.exists(_RESTART_COUNT_FILE):
                 with open(_RESTART_COUNT_FILE, "r") as f:
                     return int(f.read().strip())
-        except (ValueError, IOError):
+        except (OSError, ValueError):
             pass
         return 0
 
@@ -262,7 +261,7 @@ class AutoUpdater:
             with open(tmp_file, "w") as f:
                 f.write(str(count))
             os.rename(tmp_file, _RESTART_COUNT_FILE)
-        except IOError as e:
+        except OSError as e:
             logger.warning("无法写入重启计数文件: %s", e)
             # 清理可能残留的临时文件
             try:
@@ -278,7 +277,7 @@ class AutoUpdater:
             if os.path.exists(_RESTART_COUNT_FILE):
                 os.remove(_RESTART_COUNT_FILE)
                 logger.info("重启计数已重置")
-        except IOError as e:
+        except OSError as e:
             logger.warning("无法删除重启计数文件: %s", e)
 
 
