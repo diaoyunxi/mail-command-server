@@ -167,7 +167,7 @@ class CommandExecutor:
         if resolved is not None:
             cmd = resolved
 
-        # 安全校验
+        # 安全校验（sudo 命令由 validate 内部统一处理 flag 跳过逻辑，不再二次校验子命令）
         allowed, reason = CommandExecutor.validate(cmd)
         if not allowed:
             # 日志记录脱敏后的命令
@@ -180,11 +180,6 @@ class CommandExecutor:
             real_cmd = cmd[5:].strip()
             if not real_cmd:
                 return -1, "", "[命令被拒绝] sudo 后缺少实际命令"
-            # 二次校验：sudo 后的子命令也需要通过白名单
-            sub_allowed, sub_reason = CommandExecutor.validate(real_cmd)
-            if not sub_allowed:
-                logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd), sub_reason)
-                return -1, "", f"[命令被拒绝] {sub_reason}"
             try:
                 cmd_parts = ["sudo", "-S"] + shlex.split(real_cmd)
             except ValueError as e:
