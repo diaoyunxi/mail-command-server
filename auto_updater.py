@@ -85,6 +85,9 @@ class AutoUpdater:
             token = config.GITHUB_TOKEN.strip()
             if token:
                 headers["Authorization"] = f"token {token}"
+            # 安全校验: 仅允许 HTTP/HTTPS 协议 (S310)
+            if not api_url.startswith(("http://", "https://")):
+                raise ValueError(f"不安全的 URL 协议: {api_url}")
             req = urllib.request.Request(api_url, headers=headers)
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
