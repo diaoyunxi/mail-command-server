@@ -15,6 +15,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
 import config
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +81,8 @@ class EmailSender:
             try:
                 self._server.quit()
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self._server.close()
-                except Exception:
-                    pass
             finally:
                 self._server = None
 

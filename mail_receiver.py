@@ -27,6 +27,7 @@ import config
 from email_parser import EmailParser
 from command_executor import CommandExecutor
 from email_sender import EmailSender
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -308,10 +309,8 @@ class Pop3Receiver:
                         logger.warning(
                             "邮件 uid=%s 内容超长，跳过处理并删除", uid
                         )
-                        try:
+                        with contextlib.suppress(Exception):
                             server.dele(int(idx))
-                        except Exception:
-                            pass
                     else:
                         # 其他协议错误，记录日志但不删除（保留重试机会）
                         logger.exception("POP3 协议错误 uid=%s: %s", uid, e)
@@ -328,10 +327,8 @@ class Pop3Receiver:
             logger.exception("POP3 连接失败: %s", e)
         finally:
             if server:
-                try:
+                with contextlib.suppress(Exception):
                     server.quit()
-                except Exception:
-                    pass
 
 
 # =====================================================================

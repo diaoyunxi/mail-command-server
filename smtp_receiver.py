@@ -15,6 +15,7 @@ from email_parser import EmailParser
 from command_executor import CommandExecutor
 from email_sender import EmailSender
 import config
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -137,10 +138,8 @@ class MailCommandHandler:
         # 获取客户端IP（用于IP白名单校验）
         client_ip = ""
         if session and hasattr(session, "peer"):
-            try:
+            with contextlib.suppress(IndexError, TypeError):
                 client_ip = session.peer[0] if session.peer else ""
-            except (IndexError, TypeError):
-                pass
 
         logger.info("收到邮件 from=%s to=%s size=%d client_ip=%s", mail_from, rcpt_tos, len(raw_data), client_ip)
 
