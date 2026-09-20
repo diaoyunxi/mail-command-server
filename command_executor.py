@@ -247,7 +247,7 @@ class CommandExecutor:
         except OSError as e:
             logger.error("命令执行系统错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
             return -1, "", f"[命令执行系统错误] {str(e)}"
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e)
             return -1, "", f"[命令执行异常] {str(e)}"
 

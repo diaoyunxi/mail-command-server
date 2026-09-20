@@ -169,7 +169,7 @@ class MailProcessor:
                 logger.error("回复邮件发送失败: %s", from_addr)
             return success
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             logger.exception("处理邮件时发生异常: %s", e)
             try:
                 if mail_from:
@@ -179,7 +179,7 @@ class MailProcessor:
                         "处理您的邮件时发生内部错误，请联系管理员排查。\n",
                         subject,
                     )
-            except Exception:
+            except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                 logger.exception("发送异常通知邮件失败")
             return False
 
@@ -225,7 +225,7 @@ class Pop3Receiver:
         while not self._stop_event.is_set():
             try:
                 self._poll()
-            except Exception as e:
+            except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                 logger.exception("POP3 轮询异常: %s", e)
             self._stop_event.wait(self.poll_interval)
 
@@ -271,7 +271,7 @@ class Pop3Receiver:
                         idx = parts[0]
                         uid = parts[1]
                         uid_map[uid] = idx
-                except Exception as e:
+                except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                     logger.warning("解析 UIDL 行失败: %s", e)
 
             if not uid_map:
@@ -310,13 +310,13 @@ class Pop3Receiver:
                         )
                         try:
                             server.dele(int(idx))
-                        except Exception:
+                        except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                             pass
                     else:
                         # 其他协议错误，记录日志但不删除（保留重试机会）
                         logger.exception("POP3 协议错误 uid=%s: %s", uid, e)
 
-                except Exception as e:
+                except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                     logger.exception("处理 POP3 邮件 uid=%s 失败: %s", uid, e)
 
             if processed_count:
@@ -324,13 +324,13 @@ class Pop3Receiver:
 
             server.quit()
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             logger.exception("POP3 连接失败: %s", e)
         finally:
             if server:
                 try:
                     server.quit()
-                except Exception:
+                except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                     pass
 
 
@@ -376,7 +376,7 @@ class ImapReceiver:
         while not self._stop_event.is_set():
             try:
                 self._poll()
-            except Exception as e:
+            except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                 logger.exception("IMAP 轮询异常: %s", e)
             self._stop_event.wait(self.poll_interval)
 
@@ -448,7 +448,7 @@ class ImapReceiver:
                     # 标记为已读（避免下次重复处理）
                     server.store(msg_id, "+FLAGS", "\\Seen")
 
-                except Exception as e:
+                except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                     logger.exception("处理 IMAP 邮件 id=%s 失败: %s", msg_id, e)
 
             if processed_count:
@@ -457,14 +457,14 @@ class ImapReceiver:
             server.close()
             server.logout()
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             logger.exception("IMAP 连接失败: %s", e)
         finally:
             if server:
                 try:
                     server.close()
                     server.logout()
-                except Exception:
+                except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                     pass
 
 

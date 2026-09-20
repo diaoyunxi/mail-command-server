@@ -130,7 +130,7 @@ LOG_BACKUP_COUNT=5
         with open(_ENV_FILE, "w", encoding="utf-8") as f:
             f.write(template)
         logger.info("已自动生成 .env 配置文件模板: %s", _ENV_FILE)
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
         logger.warning("生成 .env 配置文件失败: %s", e)
 
 

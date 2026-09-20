@@ -55,7 +55,7 @@ class EmailSender:
                     code, msg = self._server.noop()
                     if code == 250:
                         return self._server
-                except Exception:
+                except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                     pass
                 # 连接已失效，关闭并重建
                 self._close_connection_locked()
@@ -79,10 +79,10 @@ class EmailSender:
         if self._server is not None:
             try:
                 self._server.quit()
-            except Exception:
+            except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                 try:
                     self._server.close()
-                except Exception:
+                except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                     pass
             finally:
                 self._server = None
@@ -166,7 +166,7 @@ class EmailSender:
             self._close_connection()
             return False
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             logger.error("邮件发送未知错误: %s", e)
             self._close_connection()
             return False
