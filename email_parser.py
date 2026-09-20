@@ -115,7 +115,7 @@ class EmailParser:
                         if payload:
                             charset = part.get_content_charset() or "utf-8"
                             body_parts.append(payload.decode(charset, errors="replace"))
-                    except Exception as e:
+                    except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                         logger.warning("解析 text/plain 失败: %s", e)
                 elif content_type == "text/html" and not body_parts:
                     try:
@@ -124,7 +124,7 @@ class EmailParser:
                             charset = part.get_content_charset() or "utf-8"
                             html = payload.decode(charset, errors="replace")
                             body_parts.append(EmailParser._html_to_text(html))
-                    except Exception as e:
+                    except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                         logger.warning("解析 text/html 失败: %s", e)
         else:
             try:
@@ -135,7 +135,7 @@ class EmailParser:
                     if msg.get_content_type() == "text/html":
                         text = EmailParser._html_to_text(text)
                     body_parts.append(text)
-            except Exception as e:
+            except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
                 logger.warning("解析单部分邮件失败: %s", e)
 
         return "\n".join(body_parts)

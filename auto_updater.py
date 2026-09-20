@@ -95,7 +95,7 @@ class AutoUpdater:
         except urllib.error.URLError as e:
             logger.warning("GitHub API 网络错误: %s", e.reason)
             return ""
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError) as e:
             logger.warning("获取远程commit失败: %s", e)
             return ""
 
@@ -116,7 +116,7 @@ class AutoUpdater:
         except FileNotFoundError:
             logger.warning("git 命令不存在")
             return ""
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError) as e:
             logger.warning("获取本地commit失败: %s", e)
             return ""
 
@@ -161,7 +161,7 @@ class AutoUpdater:
         except FileNotFoundError:
             logger.error("git 命令不存在，无法执行更新")
             return False
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError) as e:
             logger.error("执行更新失败: %s", e)
             return False
 
@@ -195,7 +195,7 @@ class AutoUpdater:
             logger.info("健康检查通过 (%d 个文件)", len(py_files))
             return True
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError) as e:
             logger.error("健康检查过程异常: %s", e)
             return False
 
@@ -211,7 +211,7 @@ class AutoUpdater:
                 check=False,
             )
             logger.info("回滚完成")
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError) as e:
             logger.error("回滚失败: %s", e)
 
     def restart(self) -> bool:

@@ -221,7 +221,7 @@ class MailCommandHandler:
             if not success:
                 logger.error("回复邮件发送失败: %s", from_addr)
 
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, ValueError, RuntimeError) as e:  # noqa: BLE001  # narrowed from Exception
             # 仅记录详细异常到日志，不向发件人泄露系统信息
             logger.exception("处理邮件时发生异常: %s", e)
             try:
@@ -235,7 +235,7 @@ class MailCommandHandler:
                         "处理您的邮件时发生内部错误，请联系管理员排查。\n",
                         subject,
                     )
-            except Exception:
+            except (OSError, ValueError, RuntimeError):  # noqa: BLE001  # narrowed from Exception
                 logger.exception("发送异常通知邮件失败")
 
         return "250 Message accepted for delivery"
