@@ -18,7 +18,7 @@ mail-command-server/
 ├── smtp_receiver.py     # SMTP接收服务器（aiosmtpd，含发件人白名单）
 ├── mail_receiver.py     # POP3/IMAP邮件接收器（轮询拉取、处理、删除/标记已读）
 ├── email_parser.py      # 邮件内容解析器（正文清洗、命令提取）
-├── command_executor.py  # 命令执行器（含危险命令黑名单、防注入）
+├── command_executor.py  # 命令执行器（含安全命令白名单、防注入）
 ├── email_sender.py      # 邮件发送器（smtplib，含连接复用）
 ├── auto_updater.py      # 自动更新模块（含健康检查、重启限制）
 ├── tests/               # 单元测试
