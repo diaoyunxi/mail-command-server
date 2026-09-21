@@ -72,32 +72,56 @@ class AutoUpdater:
         """
         通过GitHub API获取远程最新commit hash
         支持通过 GITHUB_TOKEN 环境变量认证，访问私有仓库并提升速率限制
+        使用指数退避重试（最多 3 次），应对网络抖动和临时性 5xx 错误
         Returns:
             commit SHA 字符串，失败返回空字符串
         """
-        try:
-            api_url = f"https://api.github.com/repos/{self.repo}/commits/{self.branch}"
-            headers = {
-                "Accept": "application/vnd.github.v3+json",
-                "User-Agent": "MailCommandBot-Updater/1.0",
-            }
-            # 如果配置了 GitHub Token，添加认证头
-            token = config.GITHUB_TOKEN.strip()
-            if token:
-                headers["Authorization"] = f"token {token}"
-            req = urllib.request.Request(api_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data.get("sha", "")
-        except urllib.error.HTTPError as e:
-            logger.warning("GitHub API HTTP 错误 %d: %s", e.code, e.reason)
-            return ""
-        except urllib.error.URLError as e:
-            logger.warning("GitHub API 网络错误: %s", e.reason)
-            return ""
-        except Exception as e:
-            logger.warning("获取远程commit失败: %s", e)
-            return ""
+        api_url = f"https://api.github.com/repos/{self.repo}/commits/{self.branch}"
+        headers = {
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "MailCommandBot-Updater/1.0",
+        }
+        # 如果配置了 GitHub Token，添加认证头
+        token = config.GITHUB_TOKEN.strip()
+        if token:
+            headers["Authorization"] = f"token {token}"
+
+        max_retries = 3
+        base_delay = 2  # seconds
+
+        for attempt in range(max_retries + 1):
+            try:
+                req = urllib.request.Request(api_url, headers=headers)
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    return data.get("sha", "")
+            except urllib.error.HTTPError as e:
+                if e.code == 429 or 500 <= e.code < 600:
+                    # Rate limited or server error — retry with backoff
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** attempt)
+                        logger.info("GitHub API 返回 %d，%d 秒后重试 (%d/%d)",
+                                    e.code, delay, attempt + 1, max_retries)
+                        time.sleep(delay)
+                        continue
+                    logger.warning("GitHub API HTTP 错误 %d，已达最大重试次数: %s",
+                                   e.code, e.reason)
+                else:
+                    logger.warning("GitHub API HTTP 错误 %d: %s", e.code, e.reason)
+                return ""
+            except urllib.error.URLError as e:
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt)
+                    logger.info("GitHub API 网络错误，%d 秒后重试 (%d/%d): %s",
+                                delay, attempt + 1, max_retries, e.reason)
+                    time.sleep(delay)
+                    continue
+                logger.warning("GitHub API 网络错误，已达最大重试次数: %s", e.reason)
+                return ""
+            except Exception as e:
+                logger.warning("获取远程commit失败: %s", e)
+                return ""
+        return ""
 
     def _get_local_commit(self) -> str:
         """获取本地git仓库当前commit hash"""
