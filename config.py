@@ -264,9 +264,9 @@ REQUIRE_WHITELIST = _get_bool("REQUIRE_WHITELIST", True)
 CMD_WHITELIST_ENABLE = _get_bool("CMD_WHITELIST_ENABLE", False)
 # 是否检查危险字符（false=不检查，true=拦截包含管道/重定向等字符的命令）
 CMD_BLOCK_META_ENABLE = _get_bool("CMD_BLOCK_META_ENABLE", False)
-# 是否启用发件人白名单（false=允许所有发件人，true=仅允许白名单中的邮箱）
+# 已弃用：发件人白名单和频率限制现在始终执行，与 SMTP 模式保持一致
+# 保留配置项仅为向后兼容，不再影响实际行为
 SENDER_WHITELIST_ENABLE = _get_bool("SENDER_WHITELIST_ENABLE", False)
-# 是否启用频率限制（false=不限制，true=限制每分钟最多 RATE_LIMIT_PER_MINUTE 封）
 RATE_LIMIT_ENABLE = _get_bool("RATE_LIMIT_ENABLE", False)
 
 # ==================== 频率限制配置 ====================
