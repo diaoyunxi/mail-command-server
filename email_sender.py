@@ -52,7 +52,7 @@ class EmailSender:
             if self._server is not None:
                 try:
                     # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
-                    code, msg = self._server.noop()
+                    code, _msg = self._server.noop()
                     if code == 250:
                         return self._server
                 except Exception:

@@ -132,7 +132,7 @@ class TestParseEmail:
             b"\r\n"
             b"@echo hello world\r\n"
         )
-        from_addr, to_addr, subject, body = EmailParser.parse(raw)
+        _from_addr, _to_addr, _subject, body = EmailParser.parse(raw)
         assert from_addr == "sender@example.com"
         assert to_addr == "bot@example.com"
         assert subject == "Test"
@@ -149,6 +149,6 @@ class TestParseEmail:
             b"@sudo ls /root\r\n"
             b"my_sudo_password\r\n"
         )
-        from_addr, to_addr, subject, body = EmailParser.parse(raw)
+        _from_addr, _to_addr, _subject, body = EmailParser.parse(raw)
         commands = EmailParser.extract_commands(body)
         assert commands == [("sudo ls /root", "my_sudo_password")]

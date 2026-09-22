@@ -130,7 +130,7 @@ class MailProcessor:
         subject = ""
         try:
             # 解析邮件
-            from_addr, to_addr, subject, cleaned_body = EmailParser.parse(raw_data)
+            from_addr, _to_addr, subject, cleaned_body = EmailParser.parse(raw_data)
 
             # 提取所有命令（列表格式）
             commands = EmailParser.extract_commands(cleaned_body)
