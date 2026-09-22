@@ -117,13 +117,13 @@ class MailProcessor:
             )
             return False
 
-        # 发件人白名单校验（可通过配置关闭）
-        if config.SENDER_WHITELIST_ENABLE and not _is_sender_allowed(mail_from):
+        # 发件人白名单校验（与 SMTP 模式保持一致，始终执行）
+        if not _is_sender_allowed(mail_from):
             logger.warning("发件人 %s 不在白名单中，拒绝处理", mail_from)
             return False
 
-        # 频率限制校验（可通过配置关闭）
-        if config.RATE_LIMIT_ENABLE and not self.rate_limiter.is_allowed(mail_from or "unknown"):
+        # 频率限制校验（与 SMTP 模式保持一致，始终执行）
+        if not self.rate_limiter.is_allowed(mail_from or "unknown"):
             logger.warning("发件人 %s 触发频率限制，拒绝处理", mail_from)
             return False
 
