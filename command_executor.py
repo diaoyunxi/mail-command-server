@@ -27,7 +27,11 @@ ALLOWED_COMMANDS = frozenset({
 })
 
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
-FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"})
+FIND_DANGEROUS_ARGS = frozenset({
+    "-delete", "-exec", "-execdir", "-ok", "-okdir",
+    # 输出重定向参数：可写任意文件或泄露文件信息
+    "-printf", "-fprint", "-fprintf", "-fls", "-fprint0",
+})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
 # 注意：不禁止 [ ] ! { } 等在正则表达式参数中常见的字符
