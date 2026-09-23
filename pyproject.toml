@@ -1,0 +1,31 @@
+[project]
+name = "mail-command-server"
+dynamic = ["version"]
+description = "通过邮件接收并执行 Linux 命令的远程控制系统，支持白名单安全校验、自动更新和健康检查"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "C4", "UP", "ARG", "SIM", "TCH", "PTH", "PL", "RUF", "S",
+    "G",      # flake8-logging-format
+]
+ignore = [
+    "S101",     # assert in tests
+    "S603",     # subprocess with whitelist is safe
+    "S607",     # partial executable paths
+    "PLR0913",  # config functions may have many params
+    "PLR2004",  # magic values in config
+    "S104",     # binding to all interfaces (SMTP server)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "command_executor", "email_parser", "mail_receiver"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
