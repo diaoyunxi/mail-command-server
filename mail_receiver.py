@@ -68,21 +68,24 @@ class RateLimiter:
     """
     频率限制器：按发件人进行速率限制
     与 smtp_receiver 中实现保持一致
+    线程安全：使用锁保护 _timestamps 字典的读写
     """
 
     def __init__(self, max_count: int, window_seconds: int = 60):
         self.max_count = max_count
         self.window_seconds = window_seconds
         self._timestamps = collections.defaultdict(list)
+        self._lock = threading.Lock()
 
     def is_allowed(self, key: str) -> bool:
-        now = time.time()
-        cutoff = now - self.window_seconds
-        self._timestamps[key] = [ts for ts in self._timestamps[key] if ts > cutoff]
-        if len(self._timestamps[key]) >= self.max_count:
-            return False
-        self._timestamps[key].append(now)
-        return True
+        with self._lock:
+            now = time.time()
+            cutoff = now - self.window_seconds
+            self._timestamps[key] = [ts for ts in self._timestamps[key] if ts > cutoff]
+            if len(self._timestamps[key]) >= self.max_count:
+                return False
+            self._timestamps[key].append(now)
+            return True
 
 
 # =====================================================================
