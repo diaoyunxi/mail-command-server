@@ -37,7 +37,7 @@ RECEIVE_MODE=smtp
 
 # ==================== SMTP 自建服务器配置 ====================
 # 本地SMTP接收服务器监听地址和端口（smtp 模式下使用）
-SMTP_BIND_HOST=0.0.0.0
+SMTP_BIND_HOST=127.0.0.1
 SMTP_BIND_PORT=9930
 
 # ==================== 已有邮件服务器配置（pop3/imap 模式） ====================
@@ -220,7 +220,7 @@ def _get_bool(key: str, default: bool) -> bool:
 RECEIVE_MODE = _get_str("RECEIVE_MODE", "smtp")
 
 # ==================== SMTP 自建服务器配置 ====================
-SMTP_BIND_HOST = _get_str("SMTP_BIND_HOST", "0.0.0.0")
+SMTP_BIND_HOST = _get_str("SMTP_BIND_HOST", "127.0.0.1")
 SMTP_BIND_PORT = _get_int("SMTP_BIND_PORT", 9930, min_val=1, max_val=65535)
 
 # ==================== 已有邮件服务器配置（pop3/imap 模式） ====================
