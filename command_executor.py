@@ -243,13 +243,13 @@ class CommandExecutor:
         except ValueError as e:
             # 更具体的异常捕获：参数值错误
             logger.error("命令参数错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行失败] 参数错误: {str(e)}"
+            return -1, "", f"[命令执行失败] 参数错误: {e!s}"
         except OSError as e:
             logger.error("命令执行系统错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行系统错误] {str(e)}"
+            return -1, "", f"[命令执行系统错误] {e!s}"
         except Exception as e:
             logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行异常] {str(e)}"
+            return -1, "", f"[命令执行异常] {e!s}"
 
         # 截断过长输出
         stdout = CommandExecutor._truncate(stdout)
