@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 ALLOWED_COMMANDS = frozenset({
     "ls", "cat", "df", "ps", "uptime", "free", "head", "tail",
     "grep", "wc", "date", "whoami", "id", "uname", "ifconfig",
-    "ip", "netstat", "ss", "top", "du", "find",
+    "ip", "netstat", "ss", "du",
 })
 
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
