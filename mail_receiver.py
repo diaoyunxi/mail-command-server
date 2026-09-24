@@ -21,7 +21,7 @@ import poplib
 import imaplib
 import email
 import email.policy
-from typing import List, Optional
+from typing import Optional
 
 import config
 from email_parser import EmailParser
@@ -98,7 +98,7 @@ class MailProcessor:
         self.sender = EmailSender()
         self.rate_limiter = RateLimiter(config.RATE_LIMIT_PER_MINUTE)
 
-    def process(self, raw_data: bytes, mail_from: str, rcpt_tos: List[str]) -> bool:
+    def process(self, raw_data: bytes, mail_from: str, rcpt_tos: list[str]) -> bool:
         """
         处理单封邮件
 
