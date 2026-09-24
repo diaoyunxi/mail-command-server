@@ -249,7 +249,7 @@ class AutoUpdater:
                 with open(_RESTART_COUNT_FILE, "r") as f:
                     return int(f.read().strip())
         except (ValueError, IOError):
-            pass
+            pass  # TODO: add proper error handling
         return 0
 
     @staticmethod
@@ -269,7 +269,7 @@ class AutoUpdater:
                 if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
                     os.remove(_RESTART_COUNT_FILE + ".tmp")
             except OSError:
-                pass
+                pass  # TODO: add proper error handling
 
     @staticmethod
     def reset_restart_count() -> None:

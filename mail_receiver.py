@@ -301,7 +301,7 @@ class Pop3Receiver:
                     server.dele(int(idx))
 
                 except poplib.error_proto as e:
-                    # 处理 POP3 协议错误
+                    pass  # TODO: add proper error handling
                     error_msg = str(e)
                     if "line too long" in error_msg.lower():
                         # 邮件内容超长（如包含 Base64 附件），直接删除跳过
@@ -311,7 +311,7 @@ class Pop3Receiver:
                         try:
                             server.dele(int(idx))
                         except Exception:
-                            pass
+                            pass  # TODO: add proper error handling
                     else:
                         # 其他协议错误，记录日志但不删除（保留重试机会）
                         logger.exception("POP3 协议错误 uid=%s: %s", uid, e)
@@ -331,7 +331,7 @@ class Pop3Receiver:
                 try:
                     server.quit()
                 except Exception:
-                    pass
+                    pass  # TODO: add proper error handling
 
 
 # =====================================================================
@@ -465,7 +465,7 @@ class ImapReceiver:
                     server.close()
                     server.logout()
                 except Exception:
-                    pass
+                    pass  # TODO: add proper error handling
 
 
 # =====================================================================

@@ -140,7 +140,7 @@ class MailCommandHandler:
             try:
                 client_ip = session.peer[0] if session.peer else ""
             except (IndexError, TypeError):
-                pass
+                pass  # TODO: add proper error handling
 
         logger.info("收到邮件 from=%s to=%s size=%d client_ip=%s", mail_from, rcpt_tos, len(raw_data), client_ip)
 
@@ -222,7 +222,7 @@ class MailCommandHandler:
                 logger.error("回复邮件发送失败: %s", from_addr)
 
         except Exception as e:
-            # 仅记录详细异常到日志，不向发件人泄露系统信息
+            pass  # TODO: add proper error handling
             logger.exception("处理邮件时发生异常: %s", e)
             try:
                 if mail_from:
