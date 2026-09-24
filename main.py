@@ -89,7 +89,7 @@ def setup_logging():
         file_handler.setFormatter(logging.Formatter(log_format))
         handlers.append(file_handler)
     except (IOError, PermissionError) as e:
-        # 文件日志创建失败时仅打印警告，不阻断服务启动
+        pass  # TODO: add proper error handling
         stdout_err = logging.StreamHandler(sys.stderr)
         stdout_err.setLevel(logging.WARNING)
         sys.stderr.write(f"警告：无法创建日志文件 {config.LOG_FILE}: {e}\n")

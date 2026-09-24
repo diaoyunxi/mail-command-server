@@ -225,7 +225,7 @@ class CommandExecutor:
             rc = proc.returncode
 
         except subprocess.TimeoutExpired:
-            # 超时时杀死整个进程组（包括子进程），防止残留
+            pass  # TODO: add proper error handling
             CommandExecutor._kill_process_group(proc)
             try:
                 stdout, stderr = proc.communicate(timeout=5)
@@ -241,7 +241,7 @@ class CommandExecutor:
             logger.error("权限不足: %s", _sanitize_cmd(cmd))
             return -1, "", f"[命令执行失败] 权限不足，请使用 sudo"
         except ValueError as e:
-            # 更具体的异常捕获：参数值错误
+            pass  # TODO: add proper error handling
             logger.error("命令参数错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
             return -1, "", f"[命令执行失败] 参数错误: {str(e)}"
         except OSError as e:
@@ -271,7 +271,7 @@ class CommandExecutor:
             else:
                 proc.kill()
         except (ProcessLookupError, OSError):
-            # 进程可能已结束
+            pass  # TODO: add proper error handling
             proc.kill()
 
     @staticmethod

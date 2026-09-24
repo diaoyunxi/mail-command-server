@@ -56,7 +56,7 @@ class EmailSender:
                     if code == 250:
                         return self._server
                 except Exception:
-                    pass
+                    pass  # TODO: add proper error handling
                 # 连接已失效，关闭并重建
                 self._close_connection_locked()
 
@@ -83,7 +83,7 @@ class EmailSender:
                 try:
                     self._server.close()
                 except Exception:
-                    pass
+                    pass  # TODO: add proper error handling
             finally:
                 self._server = None
 
