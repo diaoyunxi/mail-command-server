@@ -157,11 +157,11 @@ class MailProcessor:
 
             # 构造回复内容
             reply_body = (
-                f"您好，\n\n"
+                "您好，\n\n"
                 f"已收到您的命令请求，共执行 {executed_count} 条命令，结果如下：\n\n"
                 + "\n".join(all_results) +
-                f"\n\n---\n"
-                f"本邮件由 MailCommandBot 自动发送\n"
+                "\n\n---\n"
+                "本邮件由 MailCommandBot 自动发送\n"
             )
 
             success = self.sender.send_reply(from_addr, "命令执行结果", reply_body, subject)
