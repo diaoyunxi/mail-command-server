@@ -175,20 +175,34 @@ class CommandExecutor:
             return -1, "", f"[命令被拒绝] {reason}"
 
         # 解析命令：使用 shlex.split 安全拆分参数
-        is_sudo = cmd.lower().startswith("sudo ")
+        try:
+            parsed_parts = shlex.split(cmd)
+        except ValueError as e:
+            return -1, "", f"[命令解析失败] {e}"
+
+        # 检测 sudo 前缀并统一处理（与 validate 保持一致）
+        is_sudo = parsed_parts and parsed_parts[0].lower() == "sudo"
         if is_sudo:
-            real_cmd = cmd[5:].strip()
-            if not real_cmd:
+            # 跳过 sudo 本身及其标志参数（-u/--user 等），找到实际命令
+            cmd_idx = 1
+            sudo_args = ["sudo", "-S"]  # -S 用于从 stdin 读取密码
+            while cmd_idx < len(parsed_parts) and parsed_parts[cmd_idx].startswith("-"):
+                if parsed_parts[cmd_idx] in ("-u", "--user") and cmd_idx + 1 < len(parsed_parts):
+                    sudo_args.extend(parsed_parts[cmd_idx:cmd_idx + 2])
+                    cmd_idx += 2
+                else:
+                    sudo_args.append(parsed_parts[cmd_idx])
+                    cmd_idx += 1
+            if cmd_idx >= len(parsed_parts):
                 return -1, "", "[命令被拒绝] sudo 后缺少实际命令"
+            real_parts = parsed_parts[cmd_idx:]
             # 二次校验：sudo 后的子命令也需要通过白名单
-            sub_allowed, sub_reason = CommandExecutor.validate(real_cmd)
+            real_cmd_str = " ".join(shlex.quote(p) for p in real_parts)
+            sub_allowed, sub_reason = CommandExecutor.validate(real_cmd_str)
             if not sub_allowed:
-                logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd), sub_reason)
+                logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd_str), sub_reason)
                 return -1, "", f"[命令被拒绝] {sub_reason}"
-            try:
-                cmd_parts = ["sudo", "-S"] + shlex.split(real_cmd)
-            except ValueError as e:
-                return -1, "", f"[命令解析失败] {e}"
+            cmd_parts = sudo_args + real_parts
             # 日志记录脱敏后的命令
             logger.info("执行 sudo 命令: %s", _sanitize_cmd(cmd))
         else:
@@ -323,3 +337,4 @@ class CommandExecutor:
     def get_command_templates() -> dict:
         """获取预定义命令模板"""
         return dict(COMMAND_TEMPLATES)
+
