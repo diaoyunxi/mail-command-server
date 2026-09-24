@@ -251,6 +251,10 @@ class EmailParser:
                             commands[-1] = (commands[-1][0], pwd)
                             break
                         i += 1
+                    else:
+                        # 内层循环因条件不满足退出（遇到下一个 @ 行），
+                        # 不递增 i，让外层循环处理该 @ 命令
+                        continue
                 i += 1
             else:
                 i += 1
