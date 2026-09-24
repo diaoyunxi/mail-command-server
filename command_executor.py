@@ -13,7 +13,7 @@ import shlex
 import signal
 import subprocess
 import logging
-from typing import Tuple, Optional
+from typing import Optional
 import config
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class CommandExecutor:
     """命令执行器：执行 shell 命令并返回输出，内置白名单安全校验"""
 
     @staticmethod
-    def validate(cmd: str) -> Tuple[bool, str]:
+    def validate(cmd: str) -> tuple[bool, str]:
         """
         校验命令是否允许执行（白名单 + 空值检查 + 长度检查 + 元字符检查）
         Args:
@@ -151,7 +151,7 @@ class CommandExecutor:
         return None
 
     @staticmethod
-    def execute(cmd: str, password: str = "") -> Tuple[int, str, str]:
+    def execute(cmd: str, password: str = "") -> tuple[int, str, str]:
         """
         安全执行命令并返回结果
         使用 shlex.split + subprocess.Popen(shell=False) 杜绝命令注入

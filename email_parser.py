@@ -9,7 +9,7 @@ import email
 import email.policy
 from email.message import EmailMessage
 from html.parser import HTMLParser
-from typing import List, Tuple
+
 import re
 import html as html_module
 import logging
@@ -78,7 +78,7 @@ class EmailParser:
     """邮件解析器：提取邮件关键信息并清洗正文"""
 
     @staticmethod
-    def parse(raw_data: bytes) -> Tuple[str, str, str, str]:
+    def parse(raw_data: bytes) -> tuple[str, str, str, str]:
         """
         解析原始邮件数据
         Args:
@@ -202,7 +202,7 @@ class EmailParser:
         return "\n".join(cleaned_lines)
 
     @staticmethod
-    def extract_commands(body: str) -> List[Tuple[str, str]]:
+    def extract_commands(body: str) -> list[tuple[str, str]]:
         """
         从清洗后的正文中提取所有以 @ 开头的命令及其后的密码
 

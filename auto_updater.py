@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 自动更新模块
 启动时检查GitHub仓库是否有新版本，如有则拉取更新并重启
