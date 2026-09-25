@@ -82,8 +82,8 @@ class EmailSender:
             except Exception:
                 try:
                     self._server.close()
-                except Exception:
-                    pass
+                except Exception as close_err:
+                    logger.debug("SMTP 连接关闭异常: %s", close_err)
             finally:
                 self._server = None
 
