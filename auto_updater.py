@@ -137,6 +137,8 @@ class AutoUpdater:
             # 设置 git 安全环境变量，防止读取系统级配置和终端交互提示
             os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
             os.environ["GIT_TERMINAL_PROMPT"] = "0"
+            # 记录 pull 前的 commit，供健康检查失败时真正回滚使用
+            old_head = self._get_local_commit()
             result = subprocess.run(
                 ["git", "pull", "origin", self.branch],
                 cwd=self.project_dir,
@@ -153,7 +155,7 @@ class AutoUpdater:
             # 更新后健康检查：编译所有 Python 文件确认语法无误
             if not self._health_check():
                 logger.error("更新后健康检查失败，回滚更新")
-                self._rollback()
+                self._rollback(old_head)
                 return False
 
             return True
@@ -199,18 +201,31 @@ class AutoUpdater:
             logger.error("健康检查过程异常: %s", e)
             return False
 
-    def _rollback(self) -> None:
-        """回滚到更新前的版本"""
+    def _rollback(self, old_head: str = "") -> None:
+        """
+        回滚到更新前的版本
+
+        使用 `git reset --hard <old_head>` 把 HEAD/index/工作区都还原到 pull 前的
+        commit。注意：`git checkout -- .` 只是用 index 覆盖工作区，而 pull 成功后
+        index 已经指向新 commit，因此不会真正回滚。
+        """
         try:
-            logger.info("正在回滚更新...")
-            subprocess.run(
-                ["git", "checkout", "--", "."],
+            if not old_head:
+                logger.warning("回滚失败：缺少更新前的 commit 信息")
+                return
+            logger.info("正在回滚更新到 %s...", old_head[:8])
+            result = subprocess.run(
+                ["git", "reset", "--hard", old_head],
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
                 check=False,
             )
-            logger.info("回滚完成")
+            if result.returncode != 0:
+                logger.error("git reset 回滚失败 (返回码 %d): %s",
+                             result.returncode, result.stderr.strip())
+                return
+            logger.info("回滚完成: %s", result.stdout.strip())
         except Exception as e:
             logger.error("回滚失败: %s", e)
 
