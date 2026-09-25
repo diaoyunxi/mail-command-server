@@ -12,7 +12,6 @@
 此模式无需自建 SMTP 接收服务器，适合无法开放端口或不想配置 MX 记录的场景。
 """
 
-import os
 import time
 import logging
 import threading
