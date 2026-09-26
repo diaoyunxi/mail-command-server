@@ -27,7 +27,7 @@ ALLOWED_COMMANDS = frozenset({
 })
 
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
-FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"})
+FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir", "-fls", "-fprint", "-fprint0", "-fprintf"})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
 # 注意：不禁止 [ ] ! { } 等在正则表达式参数中常见的字符
@@ -129,7 +129,7 @@ class CommandExecutor:
         if cmd_name == "find" and config.CMD_WHITELIST_ENABLE:
             for arg in parts[check_start:]:
                 if arg in FIND_DANGEROUS_ARGS:
-                    return False, f"find 命令不允许使用危险参数 {arg}（-delete/-exec 等）"
+                    return False, f"find 命令不允许使用危险参数 {arg}（-delete/-exec/-fls/-fprint 等）"
 
         return True, ""
 
