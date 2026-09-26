@@ -6,6 +6,7 @@
 支持 SMTP 连接复用、分类异常捕获、大小写不敏感的 Re: 匹配
 """
 
+import contextlib
 import smtplib
 import socket
 import re
@@ -80,10 +81,8 @@ class EmailSender:
             try:
                 self._server.quit()
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self._server.close()
-                except Exception:
-                    pass
             finally:
                 self._server = None
 
