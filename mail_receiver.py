@@ -70,10 +70,24 @@ class RateLimiter:
     与 smtp_receiver 中实现保持一致
     """
 
+    # 过期内存清理：防止长期运行时 _timestamps 中残留大量空列表的发件人键，
+    # 导致内存无限增长（CWE-770）。每 _CLEANUP_INTERVAL 秒扫描一次。
+    _CLEANUP_INTERVAL = 300  # 5 分钟
+
     def __init__(self, max_count: int, window_seconds: int = 60):
         self.max_count = max_count
         self.window_seconds = window_seconds
         self._timestamps = collections.defaultdict(list)
+        self._last_cleanup = 0.0
+
+    def _cleanup_stale_keys(self, now: float) -> None:
+        """移除 _timestamps 中所有已过期的发件人键，防止内存泄漏。"""
+        if now - self._last_cleanup < self._CLEANUP_INTERVAL:
+            return
+        self._last_cleanup = now
+        stale_keys = [key for key, ts_list in self._timestamps.items() if not ts_list]
+        for key in stale_keys:
+            del self._timestamps[key]
 
     def is_allowed(self, key: str) -> bool:
         now = time.time()
@@ -82,6 +96,7 @@ class RateLimiter:
         if len(self._timestamps[key]) >= self.max_count:
             return False
         self._timestamps[key].append(now)
+        self._cleanup_stale_keys(now)
         return True
 
 
