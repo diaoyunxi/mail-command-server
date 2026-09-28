@@ -27,6 +27,9 @@ ALLOWED_COMMANDS = frozenset({
 })
 
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
+# 命令输出最大字符数，防止大输出占满内存
+MAX_OUTPUT_SIZE = 50_000
+
 FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
