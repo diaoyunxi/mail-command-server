@@ -87,7 +87,11 @@ class AutoUpdater:
                 headers["Authorization"] = f"token {token}"
             req = urllib.request.Request(api_url, headers=headers)
             with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+                try:
+                    data = json.loads(resp.read().decode("utf-8"))
+                except json.JSONDecodeError as e:
+                    print(f"[AutoUpdater] JSON 解析失败: {e}")
+                    return
                 return data.get("sha", "")
         except urllib.error.HTTPError as e:
             logger.warning("GitHub API HTTP 错误 %d: %s", e.code, e.reason)
