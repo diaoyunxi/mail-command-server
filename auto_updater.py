@@ -267,7 +267,9 @@ class AutoUpdater:
             # 清理可能残留的临时文件
             try:
                 if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
-                    os.remove(_RESTART_COUNT_FILE + ".tmp")
+                    if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
+
+                        os.remove(_RESTART_COUNT_FILE + ".tmp")
             except OSError:
                 pass
 
@@ -276,7 +278,9 @@ class AutoUpdater:
         """重置重启计数（服务正常运行超过一定时间后调用）"""
         try:
             if os.path.exists(_RESTART_COUNT_FILE):
-                os.remove(_RESTART_COUNT_FILE)
+                if os.path.exists(_RESTART_COUNT_FILE):
+
+                    os.remove(_RESTART_COUNT_FILE)
                 logger.info("重启计数已重置")
         except IOError as e:
             logger.warning("无法删除重启计数文件: %s", e)
