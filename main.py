@@ -1,3 +1,4 @@
+import signal
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -130,6 +131,14 @@ def main():
 
     logger.info("MailCommandBot 已停止")
 
+
+
+def _graceful_shutdown(signum, frame):
+    print("\n[MailServer] Shutting down gracefully...")
+    import sys
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, _graceful_shutdown)
 
 if __name__ == "__main__":
     main()
