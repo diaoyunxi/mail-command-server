@@ -132,6 +132,9 @@ class AutoUpdater:
             logger.error("非法分支名，拒绝更新: %s", self.branch)
             return False
 
+        # 记录更新前的 commit，用于回滚
+        pre_update_commit = self._get_local_commit()
+
         try:
             logger.info("开始执行更新 (分支: %s)...", self.branch)
             # 设置 git 安全环境变量，防止读取系统级配置和终端交互提示
@@ -152,8 +155,8 @@ class AutoUpdater:
 
             # 更新后健康检查：编译所有 Python 文件确认语法无误
             if not self._health_check():
-                logger.error("更新后健康检查失败，回滚更新")
-                self._rollback()
+                logger.error("更新后健康检查失败，回滚到 %s", pre_update_commit[:8] if pre_update_commit else "HEAD~1")
+                self._rollback(pre_update_commit)
                 return False
 
             return True
@@ -199,17 +202,32 @@ class AutoUpdater:
             logger.error("健康检查过程异常: %s", e)
             return False
 
-    def _rollback(self) -> None:
-        """回滚到更新前的版本"""
+    def _rollback(self, target_commit: str = "") -> None:
+        """回滚到更新前的版本
+
+        Args:
+            target_commit: 回滚目标的 commit hash，为空时回退到 HEAD~1
+        """
         try:
             logger.info("正在回滚更新...")
-            subprocess.run(
-                ["git", "checkout", "--", "."],
-                cwd=self.project_dir,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+            if target_commit:
+                # git pull 后的回滚：reset 到 pull 前的 commit
+                subprocess.run(
+                    ["git", "reset", "--hard", target_commit],
+                    cwd=self.project_dir,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+            else:
+                # 兜底：回退一个 commit
+                subprocess.run(
+                    ["git", "reset", "--hard", "HEAD~1"],
+                    cwd=self.project_dir,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
             logger.info("回滚完成")
         except Exception as e:
             logger.error("回滚失败: %s", e)
