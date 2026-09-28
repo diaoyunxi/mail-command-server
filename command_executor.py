@@ -27,6 +27,9 @@ ALLOWED_COMMANDS = frozenset({
 })
 
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
+# 命令输出最大字符数，防止大输出占满内存
+MAX_OUTPUT_SIZE = 50_000
+
 FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
@@ -239,7 +242,7 @@ class CommandExecutor:
             return -1, "", f"[命令执行失败] 找不到命令: {cmd_parts[0] if cmd_parts else cmd}"
         except PermissionError:
             logger.error("权限不足: %s", _sanitize_cmd(cmd))
-            return -1, "", f"[命令执行失败] 权限不足，请使用 sudo"
+            return -1, "", "[命令执行失败] 权限不足，请使用 sudo"
         except ValueError as e:
             # 更具体的异常捕获：参数值错误
             logger.error("命令参数错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
