@@ -204,8 +204,8 @@ class MailCommandHandler:
                 f"您好，\n\n"
                 f"已收到您的命令请求，共执行 {executed_count} 条命令，结果如下：\n\n"
                 + "\n".join(all_results) +
-                f"\n\n---\n"
-                f"本邮件由 MailCommandBot 自动发送\n"
+                "\n\n---\n"
+                "本邮件由 MailCommandBot 自动发送\n"
             )
 
             # 通过线程池发送邮件，避免阻塞事件循环
