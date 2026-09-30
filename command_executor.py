@@ -249,7 +249,7 @@ class CommandExecutor:
             return -1, "", f"[命令执行系统错误] {str(e)}"
         except Exception as e:
             logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行异常] {str(e)}"
+            return -1, "", f"[命令执行异常] 未知错误，请联系管理员"
 
         # 截断过长输出
         stdout = CommandExecutor._truncate(stdout)
