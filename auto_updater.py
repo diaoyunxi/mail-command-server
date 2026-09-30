@@ -259,7 +259,7 @@ class AutoUpdater:
             count = AutoUpdater._read_restart_count() + 1
             # 写入临时文件，然后原子性重命名，防止写入过程中崩溃导致文件损坏
             tmp_file = _RESTART_COUNT_FILE + ".tmp"
-            with open(tmp_file, "w") as f:
+            with open(tmp_file, "w", encoding="utf-8") as f:
                 f.write(str(count))
             os.rename(tmp_file, _RESTART_COUNT_FILE)
         except IOError as e:
