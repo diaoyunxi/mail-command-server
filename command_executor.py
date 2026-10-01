@@ -248,8 +248,8 @@ class CommandExecutor:
             logger.error("命令执行系统错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
             return -1, "", f"[命令执行系统错误] {str(e)}"
         except Exception as e:
-            logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e)
-            return -1, "", f"[命令执行异常] {str(e)}"
+            logger.error("命令执行异常: %s, 错误: %s", _sanitize_cmd(cmd), e, exc_info=True)
+            return -1, "", "[命令执行异常] 执行过程中发生未预期的错误，请查看日志获取详细信息"
 
         # 截断过长输出
         stdout = CommandExecutor._truncate(stdout)
