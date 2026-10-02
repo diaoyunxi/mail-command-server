@@ -35,7 +35,7 @@ class EmailSender:
         self.sender_name = config.SENDER_NAME
         # 连接复用：缓存 SMTP 连接
         self._server = None
-        # 线程安全锁：保护 _get_connection 和 _close_connection 的并发访问
+        # 线程安全锁：保护连接获取、sendmail 发送与连接关闭的并发访问
         self._lock = threading.Lock()
         # 心跳保活间隔（秒），0 表示禁用
         self._keepalive_interval = config.SMTP_KEEPALIVE_INTERVAL
@@ -48,29 +48,39 @@ class EmailSender:
             可用的 SMTP 连接对象
         """
         with self._lock:
-            # 尝试复用已有连接
-            if self._server is not None:
-                try:
-                    # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
-                    code, msg = self._server.noop()
-                    if code == 250:
-                        return self._server
-                except Exception:
-                    pass
-                # 连接已失效，关闭并重建
-                self._close_connection_locked()
+            return self._get_connection_locked()
 
-            # 创建新连接
-            if self.use_tls:
-                # 587 端口使用 STARTTLS
-                self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
-                self._server.starttls()
-            else:
-                # 465 端口使用 SSL
-                self._server = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
-            if self.user and self.password:
-                self._server.login(self.user, self.password)
-            return self._server
+    def _get_connection_locked(self) -> smtplib.SMTP:
+        """
+        获取 SMTP 连接（内部方法，调用方必须已持有 self._lock）
+        需与 sendmail 在同一把锁内执行，避免多线程共用同一 SMTP 连接时
+        SMTP 命令交错导致发送失败、收件人错乱或连接被误关
+        Returns:
+            可用的 SMTP 连接对象
+        """
+        # 尝试复用已有连接
+        if self._server is not None:
+            try:
+                # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
+                code, _ = self._server.noop()
+                if code == 250:
+                    return self._server
+            except Exception:
+                pass
+            # 连接已失效，关闭并重建
+            self._close_connection_locked()
+
+        # 创建新连接
+        if self.use_tls:
+            # 587 端口使用 STARTTLS
+            self._server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            self._server.starttls()
+        else:
+            # 465 端口使用 SSL
+            self._server = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
+        if self.user and self.password:
+            self._server.login(self.user, self.password)
+        return self._server
 
     def _close_connection_locked(self) -> None:
         """
@@ -123,8 +133,12 @@ class EmailSender:
 
         try:
             logger.info("发送邮件至 %s, 主题: %s", to_addr, reply_subject)
-            server = self._get_connection()
-            server.sendmail(self.user, [to_addr], msg.as_string())
+            # 连接获取与 sendmail 必须在同一把锁内完成：
+            # 本发送器复用同一个 SMTP 连接，若多个线程并发进入
+            # send_reply，SMTP 命令会交错，导致发送失败或收件人错乱
+            with self._lock:
+                server = self._get_connection_locked()
+                server.sendmail(self.user, [to_addr], msg.as_string())
             logger.info("邮件发送成功: %s", to_addr)
             return True
 
