@@ -29,6 +29,10 @@ ALLOWED_COMMANDS = frozenset({
 # find 命令的危险参数（禁止使用，防止删除文件或执行任意命令）
 FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"})
 
+# find 命令允许搜索的根目录白名单 (CWE-22: Path Traversal)
+# 仅允许搜索以下安全目录，禁止搜索 /etc /root /var/shadow 等敏感路径
+FIND_ALLOWED_ROOTS = frozenset({"/home", "/tmp", "/var/log", "/opt", "/srv"})
+
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
 # 注意：不禁止 [ ] ! { } 等在正则表达式参数中常见的字符
 _BLOCKED_META_PATTERN = re.compile(r'[|;`$()>&<]')
@@ -130,6 +134,24 @@ class CommandExecutor:
             for arg in parts[check_start:]:
                 if arg in FIND_DANGEROUS_ARGS:
                     return False, f"find 命令不允许使用危险参数 {arg}（-delete/-exec 等）"
+            # find 命令搜索路径必须在白名单目录内，防止遍历 /etc /root 等敏感目录 (CWE-22)
+            # find 语法: find [path...] [expression]，第一个非 '-' 开头的参数是搜索路径
+            search_path = None
+            for arg in parts[check_start:]:
+                if not arg.startswith("-"):
+                    search_path = arg
+                    break
+            if search_path is None:
+                # 未指定路径时 find 默认搜索当前目录（cwd="/"），禁止此行为
+                return False, "find 命令必须显式指定搜索路径"
+            # 规范化路径并检查是否在允许范围内
+            abs_path = os.path.realpath(search_path)
+            allowed = any(
+                abs_path == root or abs_path.startswith(root + "/")
+                for root in FIND_ALLOWED_ROOTS
+            )
+            if not allowed:
+                return False, f"find 搜索路径 '{search_path}' 不在允许范围内（仅允许: {', '.join(sorted(FIND_ALLOWED_ROOTS))}）"
 
         return True, ""
 
