@@ -304,3 +304,26 @@ _get_env_value = _get_value
 _get_int_env = _get_int
 _get_str_env = _get_str
 _get_bool_env = _get_bool
+
+
+# =====================================================================
+# 启动时关键配置校验（仅告警，不阻断启动）
+# =====================================================================
+def _validate_critical_config() -> None:
+    """检查关键配置项是否已填写，缺失时输出 WARNING 日志提示用户"""
+    _critical_fields = {
+        "SMTP_OUT_USER": "外发 SMTP 账号未配置，邮件发送功能将不可用",
+        "SMTP_OUT_PASS": "外发 SMTP 密码未配置，邮件发送功能将不可用",
+    }
+    _mode = _get_str("RECEIVE_MODE", "smtp")
+    if _mode in ("pop3", "imap"):
+        _critical_fields["MAIL_IN_USER"] = "收件邮箱账号未配置，邮件接收功能将不可用"
+        _critical_fields["MAIL_IN_PASS"] = "收件邮箱密码未配置，邮件接收功能将不可用"
+
+    for field, msg in _critical_fields.items():
+        val = _get_str(field, "")
+        if not val:
+            logger.warning("[配置检查] %s: %s (请在 .env 文件中设置)", field, msg)
+
+
+_validate_critical_config()
