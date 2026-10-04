@@ -304,3 +304,15 @@ _get_env_value = _get_value
 _get_int_env = _get_int
 _get_str_env = _get_str
 _get_bool_env = _get_bool
+
+
+# 启动时配置校验 (CWE-755)
+def validate_config():
+    """校验关键配置项不为空，缺失时输出 WARNING"""
+    import logging
+    _logger = logging.getLogger("config")
+    required = ["SMTP_OUT_HOST", "SMTP_OUT_USER", "SMTP_OUT_PASS"]
+    for key in required:
+        val = getattr(sys.modules[__name__], key, None)
+        if not val:
+            _logger.warning(f"配置项 {key} 未设置或为空，邮件发送功能可能不可用")
