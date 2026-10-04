@@ -55,8 +55,8 @@ class EmailSender:
                     code, msg = self._server.noop()
                     if code == 250:
                         return self._server
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logger.debug(f"操作异常(已忽略): {_e}")
                 # 连接已失效，关闭并重建
                 self._close_connection_locked()
 
@@ -82,8 +82,8 @@ class EmailSender:
             except Exception:
                 try:
                     self._server.close()
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logger.debug(f"操作异常(已忽略): {_e}")
             finally:
                 self._server = None
 
