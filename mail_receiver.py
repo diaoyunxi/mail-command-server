@@ -321,8 +321,6 @@ class Pop3Receiver:
             if processed_count:
                 logger.info("POP3 本次处理 %d 封邮件", processed_count)
 
-            server.quit()
-
         except Exception as e:
             logger.exception("POP3 连接失败: %s", e)
         finally:
@@ -453,15 +451,15 @@ class ImapReceiver:
             if processed_count:
                 logger.info("IMAP 本次处理 %d 封邮件", processed_count)
 
-            server.close()
-            server.logout()
-
         except Exception as e:
             logger.exception("IMAP 连接失败: %s", e)
         finally:
             if server:
                 try:
                     server.close()
+                except Exception:
+                    pass
+                try:
                     server.logout()
                 except Exception:
                     pass
