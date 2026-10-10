@@ -255,7 +255,7 @@ class AutoUpdater:
         """读取重启计数"""
         try:
             if os.path.exists(_RESTART_COUNT_FILE):
-                with open(_RESTART_COUNT_FILE, "r") as f:
+                with open(_RESTART_COUNT_FILE, "r", encoding="utf-8") as f:
                     return int(f.read().strip())
         except (ValueError, IOError):
             pass
@@ -268,7 +268,7 @@ class AutoUpdater:
             count = AutoUpdater._read_restart_count() + 1
             # 写入临时文件，然后原子性重命名，防止写入过程中崩溃导致文件损坏
             tmp_file = _RESTART_COUNT_FILE + ".tmp"
-            with open(tmp_file, "w") as f:
+            with open(tmp_file, "w", encoding="utf-8") as f:
                 f.write(str(count))
             os.rename(tmp_file, _RESTART_COUNT_FILE)
         except IOError as e:
