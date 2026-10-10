@@ -185,7 +185,7 @@ class TestCommandExecutorTruncate:
 
     def test_long_text_truncated(self):
         """超长文本应被截断并添加提示"""
-        original_len = CommandExecutor._truncate.__wrapped__(10000) if hasattr(CommandExecutor._truncate, '__wrapped__') else 50000
+        _ = CommandExecutor._truncate.__wrapped__(10000) if hasattr(CommandExecutor._truncate, "__wrapped__") else 50000  # noqa: F841
         import config as cfg
         long_text = "a" * (cfg.CMD_MAX_OUTPUT + 1000)
         result = CommandExecutor._truncate(long_text)
