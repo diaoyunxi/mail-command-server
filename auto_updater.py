@@ -181,7 +181,12 @@ class AutoUpdater:
             所有文件语法检查是否通过
         """
         try:
-            py_files = glob.glob(os.path.join(self.project_dir, "*.py"))
+            py_files = glob.glob(os.path.join(self.project_dir, "**", "*.py"), recursive=True)
+            # 排除虚拟环境和测试目录
+            py_files = [
+                f for f in py_files
+                if "/venv/" not in f and "/.venv/" not in f and "/__pycache__/" not in f
+            ]
             if not py_files:
                 logger.warning("未找到 Python 文件，跳过健康检查")
                 return True
