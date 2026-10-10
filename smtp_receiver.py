@@ -294,6 +294,7 @@ class SmtpReceiver:
         self.start()
         logger.info("服务器运行中，按 Ctrl+C 停止...")
         try:
+            _max_iter = 1000000  # Safety limit
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
