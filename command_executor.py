@@ -275,7 +275,7 @@ class CommandExecutor:
             return -1, "", f"[命令执行失败] 找不到命令: {cmd_parts[0] if cmd_parts else cmd}"
         except PermissionError:
             logger.error("权限不足: %s", _sanitize_cmd(cmd))
-            return -1, "", f"[命令执行失败] 权限不足，请使用 sudo"
+            return -1, "", "[命令执行失败] 权限不足，请使用 sudo"
         except ValueError as e:
             # 更具体的异常捕获：参数值错误
             logger.error("命令参数错误: %s, 错误: %s", _sanitize_cmd(cmd), e)
