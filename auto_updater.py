@@ -15,6 +15,7 @@ import logging
 import json
 import urllib.request
 import urllib.error
+import urllib.parse
 import time
 
 import config
@@ -29,6 +30,42 @@ _RESTART_COUNT_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     ".restart_count"
 )
+
+# 允许 urlopen 使用的安全协议白名单（防止 file:// 等协议被利用）
+_ALLOWED_URL_SCHEMES = ("http", "https")
+
+
+def _safe_urlopen(req, timeout: int = 15):
+    """
+    安全地发起 URL 请求：仅允许 http/https 协议后再调用 urlopen
+
+    说明:
+        直接调用 urlopen 时，攻击者可能构造 file:// 等协议读取本地文件
+        （Bandit B310 / CWE-22）。此处先校验目标 URL 的协议，
+        非 http/https 时记录 warning 并抛出异常，由调用方按原有语义
+        捕获后返回空字符串。
+
+    Args:
+        req: urllib.request.Request 对象或 URL 字符串
+        timeout: 请求超时秒数
+
+    Returns:
+        urlopen 返回的响应对象
+
+    Raises:
+        ValueError: 当目标 URL 的协议不是 http/https 时
+    """
+    # 兼容 Request 对象与普通字符串两种入参
+    target_url = req.full_url if hasattr(req, "full_url") else str(req)
+    scheme = urllib.parse.urlsplit(target_url).scheme.lower()
+    if scheme not in _ALLOWED_URL_SCHEMES:
+        logger.warning(
+            "拒绝非 http/https 协议的 URL 请求 (scheme=%s): %s",
+            scheme or "无",
+            target_url,
+        )
+        raise ValueError(f"不支持的 URL 协议: {scheme!r}，仅允许 http/https")
+    return urllib.request.urlopen(req, timeout=timeout)
 
 
 def _resolve_git_path() -> str:
@@ -95,7 +132,7 @@ class AutoUpdater:
             if token:
                 headers["Authorization"] = f"token {token}"
             req = urllib.request.Request(api_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with _safe_urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data.get("sha", "")
         except urllib.error.HTTPError as e:
