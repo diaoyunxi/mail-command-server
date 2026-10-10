@@ -309,8 +309,8 @@ class Pop3Receiver:
                         )
                         try:
                             server.dele(int(idx))
-                        except Exception:
-                            pass
+                        except Exception as _e:
+                            logger.debug(f"操作异常(已忽略): {_e}")
                     else:
                         # 其他协议错误，记录日志但不删除（保留重试机会）
                         logger.exception("POP3 协议错误 uid=%s: %s", uid, e)
@@ -327,8 +327,8 @@ class Pop3Receiver:
             if server:
                 try:
                     server.quit()
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logger.debug(f"操作异常(已忽略): {_e}")
 
 
 # =====================================================================
@@ -461,8 +461,8 @@ class ImapReceiver:
                     pass
                 try:
                     server.logout()
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logger.debug(f"操作异常(已忽略): {_e}")
 
 
 # =====================================================================
