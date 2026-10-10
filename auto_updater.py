@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import glob
+import shutil
 import subprocess
 import logging
 import json
@@ -21,6 +22,12 @@ import time
 import config
 
 logger = logging.getLogger(__name__)
+
+def _which_or_default(cmd, default=None):
+    """解析命令的完整路径，失败时返回默认值"""
+    path = shutil.which(cmd)
+    return path if path else default
+
 
 # 合法分支名字符集：仅允许字母、数字、下划线、连字符、点号、斜杠
 SAFE_BRANCH_PATTERN = re.compile(r"^[a-zA-Z0-9_\-\./]+$")
