@@ -251,6 +251,10 @@ class EmailParser:
                             commands[-1] = (commands[-1][0], pwd)
                             break
                         i += 1
+                    # 如果当前行是下一个 @ 命令，不要 i += 1，
+                    # 让外层 while 循环直接处理它
+                    if i < len(lines) and lines[i].strip().startswith("@"):
+                        continue
                 i += 1
             else:
                 i += 1
