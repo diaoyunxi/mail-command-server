@@ -112,9 +112,14 @@ class EmailSender:
             return False
 
         # 构造回复主题：大小写不敏感匹配 Re:
+        # - 无原始主题时使用通用主题
+        # - 有原始主题时保留线程：已有 Re: 前缀则直接沿用，否则补 Re:
         reply_subject = subject
-        if original_subject and not re.match(r"(?i)^re:\s*", original_subject):
-            reply_subject = f"Re: {original_subject}"
+        if original_subject:
+            if not re.match(r"(?i)^re:\s*", original_subject):
+                reply_subject = f"Re: {original_subject}"
+            else:
+                reply_subject = original_subject
 
         msg = MIMEText(body, "plain", "utf-8")
         msg["From"] = formataddr((Header(self.sender_name, "utf-8").encode(), self.user))
