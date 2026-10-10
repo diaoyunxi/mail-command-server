@@ -202,7 +202,18 @@ class CommandExecutor:
             real_cmd = cmd[5:].strip()
             if not real_cmd:
                 return -1, "", "[命令被拒绝] sudo 后缺少实际命令"
-            # 二次校验：sudo 后的子命令也需要通过白名单
+            # 关键修复 (CWE-863)：validate() 会跳过第一个 token（视为命令名不校验），
+            # 但 sudo 后的子命令必须独立进行白名单校验，否则 sudo rm -rf / 等命令会绕过检查
+            try:
+                real_parts = shlex.split(real_cmd)
+            except ValueError as e:
+                return -1, "", f"[命令解析失败] {e}"
+            if real_parts:
+                real_cmd_name = os.path.basename(real_parts[0])
+                if config.CMD_WHITELIST_ENABLE and real_cmd_name not in ALLOWED_COMMANDS:
+                    logger.warning("sudo 子命令被拦截: %s 不在白名单中", real_cmd_name)
+                    return -1, "", f"[命令被拒绝] sudo 后的命令 '{real_cmd_name}' 不在安全白名单中"
+            # 二次校验：sudo 后的参数也需要通过安全规则
             sub_allowed, sub_reason = CommandExecutor.validate(real_cmd)
             if not sub_allowed:
                 logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd), sub_reason)
