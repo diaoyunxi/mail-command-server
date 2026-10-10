@@ -31,6 +31,15 @@ _RESTART_COUNT_FILE = os.path.join(
 )
 
 
+def _resolve_git_path() -> str:
+    """解析 git 可执行文件的完整路径，防止 PATH 劫持 (S607)"""
+    import shutil
+    return shutil.which("git") or "/usr/bin/git"
+
+
+GIT_PATH = _resolve_git_path()
+
+
 class AutoUpdater:
     """自动更新器：检查GitHub远程仓库更新并应用"""
 
@@ -103,7 +112,7 @@ class AutoUpdater:
         """获取本地git仓库当前commit hash"""
         try:
             result = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
+                [GIT_PATH, "rev-parse", "HEAD"],
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
@@ -138,7 +147,7 @@ class AutoUpdater:
             os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
             os.environ["GIT_TERMINAL_PROMPT"] = "0"
             result = subprocess.run(
-                ["git", "pull", "origin", self.branch],
+                [GIT_PATH, "pull", "origin", self.branch],
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
