@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 config 模块单元测试
 覆盖：配置读取函数、边界值校验、默认值合理性
 """
 
-import sys
 import os
+import sys
 import tempfile
-import pytest
 from pathlib import Path
 from unittest import mock
+
+import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

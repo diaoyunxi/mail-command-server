@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CommandExecutor 单元测试
 覆盖：命令校验（黑名单/空值/长度）、命令执行（普通/sudo）、输出截断
 """
 
-import sys
 import os
+import sys
+
 import pytest
 
 # 将项目根目录加入 sys.path

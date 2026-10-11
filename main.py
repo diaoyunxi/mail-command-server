@@ -1,4 +1,5 @@
 import signal
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -58,9 +59,9 @@ import logging.handlers
 import sys
 
 import config
-from smtp_receiver import SmtpReceiver
-from mail_receiver import MailReceiver
 from auto_updater import check_update_on_start
+from mail_receiver import MailReceiver
+from smtp_receiver import SmtpReceiver
 
 
 def setup_logging():
