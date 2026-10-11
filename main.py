@@ -1,7 +1,7 @@
-import signal
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+import signal
 邮件命令执行服务器主入口
 
 功能：

@@ -165,7 +165,8 @@ class AutoUpdater:
                 capture_output=True,
                 text=True,
                 check=True,
-            , timeout=300)
+                timeout=300,
+            )
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
             logger.warning("获取本地commit失败 (返回码 %d): %s", e.returncode, e.stderr.strip())
@@ -200,7 +201,8 @@ class AutoUpdater:
                 capture_output=True,
                 text=True,
                 check=False,
-            , timeout=300)
+                timeout=300,
+            )
             if result.returncode != 0:
                 logger.error("git pull 失败 (返回码 %d): %s", result.returncode, result.stderr.strip())
                 return False
@@ -245,7 +247,8 @@ class AutoUpdater:
                     capture_output=True,
                     text=True,
                     check=False,
-                , timeout=300)
+                    timeout=300,
+                )
                 if result.returncode != 0:
                     logger.error(
                         "文件 %s 语法检查失败: %s",
@@ -271,7 +274,8 @@ class AutoUpdater:
                 capture_output=True,
                 text=True,
                 check=False,
-            , timeout=300)
+                timeout=300,
+            )
             logger.info("回滚完成")
         except Exception as e:
             logger.error("回滚失败: %s", e)
