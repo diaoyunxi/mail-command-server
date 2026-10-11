@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 EmailParser 单元测试
 覆盖：邮件解析、正文清洗、命令提取、密码提取
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -148,6 +147,6 @@ class TestParseEmail:
             b"@sudo ls /root\r\n"
             b"my_sudo_password\r\n"
         )
-        from_addr, to_addr, subject, body = EmailParser.parse(raw)
+        _from_addr, _to_addr, _subject, body = EmailParser.parse(raw)
         commands = EmailParser.extract_commands(body)
         assert commands == [("sudo ls /root", "my_sudo_password")]
