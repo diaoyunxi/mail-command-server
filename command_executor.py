@@ -12,6 +12,7 @@ import re
 import shlex
 import signal
 import subprocess
+import tempfile
 import logging
 from typing import Tuple, Optional
 import config
@@ -34,7 +35,7 @@ FIND_DANGEROUS_ARGS = frozenset({"-delete", "-exec", "-execdir", "-ok", "-okdir"
 
 # find 命令允许搜索的根目录白名单 (CWE-22: Path Traversal)
 # 仅允许搜索以下安全目录，禁止搜索 /etc /root /var/shadow 等敏感路径
-FIND_ALLOWED_ROOTS = frozenset({"/home", "/tmp", "/var/log", "/opt", "/srv"})
+FIND_ALLOWED_ROOTS = frozenset({"/home", tempfile.gettempdir(), "/var/log", "/opt", "/srv"})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
 # 注意：不禁止 [ ] ! { } 等在正则表达式参数中常见的字符
