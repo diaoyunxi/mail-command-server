@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 邮件内容解析模块
 负责从原始邮件中提取发件人、主题、以及纯文本正文内容
@@ -7,12 +6,12 @@
 
 import email
 import email.policy
+import html as html_module
+import logging
+import re
 from email.message import EmailMessage
 from html.parser import HTMLParser
 from typing import List, Tuple
-import re
-import html as html_module
-import logging
 
 logger = logging.getLogger(__name__)
 

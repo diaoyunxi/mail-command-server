@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 邮件接收模块（POP3/IMAP 模式）
 通过已有邮件服务器的 POP3 或 IMAP 协议主动拉取邮件，
@@ -12,19 +11,19 @@
 此模式无需自建 SMTP 接收服务器，适合无法开放端口或不想配置 MX 记录的场景。
 """
 
-import time
-import logging
-import threading
 import collections
-import poplib
-import imaplib
 import email
 import email.policy
+import imaplib
+import logging
+import poplib
+import threading
+import time
 from typing import List, Optional
 
 import config
-from email_parser import EmailParser
 from command_executor import CommandExecutor
+from email_parser import EmailParser
 from email_sender import EmailSender
 
 logger = logging.getLogger(__name__)

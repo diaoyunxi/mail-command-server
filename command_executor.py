@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 命令执行模块
 执行以 @ 开头的 Linux 命令，支持 sudo 密码传入
@@ -7,13 +6,14 @@
 包含敏感信息脱敏、命令模板、输出大小限制等安全机制
 """
 
+import logging
 import os
 import re
 import shlex
 import signal
 import subprocess
-import logging
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import config
 
 logger = logging.getLogger(__name__)
