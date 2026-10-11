@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 邮件内容解析模块
 负责从原始邮件中提取发件人、主题、以及纯文本正文内容
@@ -6,11 +7,12 @@
 
 import email
 import email.policy
-import html as html_module
-import logging
-import re
 from email.message import EmailMessage
 from html.parser import HTMLParser
+from typing import List, Tuple
+import re
+import html as html_module
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class EmailParser:
     """邮件解析器：提取邮件关键信息并清洗正文"""
 
     @staticmethod
-    def parse(raw_data: bytes) -> tuple[str, str, str, str]:
+    def parse(raw_data: bytes) -> Tuple[str, str, str, str]:
         """
         解析原始邮件数据
         Args:
@@ -200,7 +202,7 @@ class EmailParser:
         return "\n".join(cleaned_lines)
 
     @staticmethod
-    def extract_commands(body: str) -> list[tuple[str, str]]:
+    def extract_commands(body: str) -> List[Tuple[str, str]]:
         """
         从清洗后的正文中提取所有以 @ 开头的命令及其后的密码
 

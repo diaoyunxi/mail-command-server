@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 命令执行模块
 执行以 @ 开头的 Linux 命令，支持 sudo 密码传入
@@ -6,13 +7,13 @@
 包含敏感信息脱敏、命令模板、输出大小限制等安全机制
 """
 
-import logging
 import os
 import re
 import shlex
 import signal
 import subprocess
-
+import logging
+from typing import Tuple, Optional
 import config
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ class CommandExecutor:
     """命令执行器：执行 shell 命令并返回输出，内置白名单安全校验"""
 
     @staticmethod
-    def validate(cmd: str) -> tuple[bool, str]:
+    def validate(cmd: str) -> Tuple[bool, str]:
         """
         校验命令是否允许执行（白名单 + 空值检查 + 长度检查 + 元字符检查）
         Args:
@@ -122,6 +123,9 @@ class CommandExecutor:
             if cmd_idx >= len(parts):
                 return False, "sudo 后缺少实际命令"
             cmd_name = os.path.basename(parts[cmd_idx])
+            # 安全修复：禁止嵌套 sudo 调用（如 sudo sudo ls），防止绕过白名单校验
+            if cmd_name.lower() == "sudo":
+                return False, "禁止嵌套 sudo 调用（安全策略）"
             check_start = cmd_idx + 1
         else:
             cmd_name = os.path.basename(parts[0])
@@ -158,7 +162,7 @@ class CommandExecutor:
         return True, ""
 
     @staticmethod
-    def resolve_template(cmd: str) -> str | None:
+    def resolve_template(cmd: str) -> Optional[str]:
         """
         解析命令模板引用，格式为 template:名称
         Args:
@@ -175,7 +179,7 @@ class CommandExecutor:
         return None
 
     @staticmethod
-    def execute(cmd: str, password: str = "") -> tuple[int, str, str]:
+    def execute(cmd: str, password: str = "") -> Tuple[int, str, str]:
         """
         安全执行命令并返回结果
         使用 shlex.split + subprocess.Popen(shell=False) 杜绝命令注入
@@ -221,7 +225,7 @@ class CommandExecutor:
                 logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd), sub_reason)
                 return -1, "", f"[命令被拒绝] {sub_reason}"
             try:
-                cmd_parts = ["sudo", "-S", *shlex.split(real_cmd)]
+                cmd_parts = ["sudo", "-S"] + shlex.split(real_cmd)
             except ValueError as e:
                 return -1, "", f"[命令解析失败] {e}"
             # 日志记录脱敏后的命令

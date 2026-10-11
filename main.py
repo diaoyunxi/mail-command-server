@@ -1,5 +1,4 @@
 import signal
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -59,9 +58,9 @@ import logging.handlers
 import sys
 
 import config
-from auto_updater import check_update_on_start
-from mail_receiver import MailReceiver
 from smtp_receiver import SmtpReceiver
+from mail_receiver import MailReceiver
+from auto_updater import check_update_on_start
 
 
 def setup_logging():
@@ -90,7 +89,7 @@ def setup_logging():
         file_handler.setLevel(log_level)
         file_handler.setFormatter(logging.Formatter(log_format))
         handlers.append(file_handler)
-    except (OSError, PermissionError) as e:
+    except (IOError, PermissionError) as e:
         # 文件日志创建失败时仅打印警告，不阻断服务启动
         stdout_err = logging.StreamHandler(sys.stderr)
         stdout_err.setLevel(logging.WARNING)

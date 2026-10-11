@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 SMTP接收服务器模块
 使用 aiosmtpd 在本地端口接收邮件，解析后执行命令并回复
@@ -6,16 +7,14 @@ SMTP接收服务器模块
 """
 
 import asyncio
-import collections
-import logging
 import time
-
+import logging
+import collections
 from aiosmtpd.controller import Controller
-
-import config
-from command_executor import CommandExecutor
 from email_parser import EmailParser
+from command_executor import CommandExecutor
 from email_sender import EmailSender
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +172,7 @@ class MailCommandHandler:
 
         try:
             # 解析邮件
-            from_addr, _to_addr, subject, cleaned_body = EmailParser.parse(raw_data)
+            from_addr, to_addr, subject, cleaned_body = EmailParser.parse(raw_data)
 
             # 提取所有命令（列表格式）
             commands = EmailParser.extract_commands(cleaned_body)
@@ -245,7 +244,7 @@ class MailCommandHandler:
 class SmtpReceiver:
     """SMTP 接收服务器包装类"""
 
-    def __init__(self, host: str | None = None, port: int | None = None):
+    def __init__(self, host: str = None, port: int = None):
         self.host = host or config.SMTP_BIND_HOST
         self.port = port or config.SMTP_BIND_PORT
         self.controller = None
