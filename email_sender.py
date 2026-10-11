@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 邮件发送模块
 负责将命令执行结果通过邮件回复给发件人
 支持 SMTP 连接复用、分类异常捕获、大小写不敏感的 Re: 匹配
 """
 
-import smtplib
-import socket
-import re
 import logging
+import re
+import smtplib
 import threading
-from email.mime.text import MIMEText
 from email.header import Header
+from email.mime.text import MIMEText
 from email.utils import formataddr
+
 import config
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ class EmailSender:
             if self._server is not None:
                 try:
                     # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
-                    code, msg = self._server.noop()
+                    code, _msg = self._server.noop()
                     if code == 250:
                         return self._server
                 except Exception as _e:
@@ -156,7 +155,7 @@ class EmailSender:
             self._close_connection()
             return False
 
-        except socket.timeout:
+        except TimeoutError:
             logger.error("邮件发送超时 (>%d秒): %s", self.timeout, to_addr)
             self._close_connection()
             return False
