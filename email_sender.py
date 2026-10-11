@@ -18,6 +18,9 @@ import config
 
 logger = logging.getLogger(__name__)
 
+# SMTP 成功响应码
+SMTP_OK_CODE = 250
+
 
 class EmailSender:
     """
@@ -53,7 +56,7 @@ class EmailSender:
                 try:
                     # 发送 NOOP 命令检查连接是否存活（同时起到心跳保活作用）
                     code, msg = self._server.noop()
-                    if code == 250:
+                    if code == SMTP_OK_CODE:
                         return self._server
                 except Exception as _e:
                     logger.debug(f"操作异常(已忽略): {_e}")
