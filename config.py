@@ -129,9 +129,9 @@ LOG_BACKUP_COUNT=5
     try:
         with open(_ENV_FILE, "w", encoding="utf-8") as f:
             f.write(template)
-    # 设置 .env 文件权限为 600（仅所有者可读写），防止敏感配置泄露
-    import os
-    os.chmod(_ENV_FILE, 0o600)
+        # 设置 .env 文件权限为 600（仅所有者可读写），防止敏感配置泄露
+        import os
+        os.chmod(_ENV_FILE, 0o600)
         logger.info("已自动生成 .env 配置文件模板: %s", _ENV_FILE)
     except Exception as e:
         logger.warning("生成 .env 配置文件失败: %s", e)
