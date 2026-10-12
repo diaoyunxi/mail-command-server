@@ -134,45 +134,45 @@ class EmailSender:
             return True
 
         except smtplib.SMTPAuthenticationError as e:
-            logger.error("SMTP 认证失败: %s (请检查 SMTP_OUT_USER 和 SMTP_OUT_PASS)", e)
+            logger.exception("SMTP 认证失败: %s (请检查 SMTP_OUT_USER 和 SMTP_OUT_PASS)", e)
             self._close_connection()
             return False
 
         except smtplib.SMTPConnectError as e:
-            logger.error("SMTP 连接失败: %s", e)
+            logger.exception("SMTP 连接失败: %s", e)
             self._close_connection()
             return False
 
         except smtplib.SMTPRecipientsRefused as e:
-            logger.error("收件人被拒绝: %s", e.recipients)
+            logger.exception("收件人被拒绝: %s", e.recipients)
             return False
 
         except smtplib.SMTPDataError as e:
-            logger.error("SMTP 数据错误: %s", e)
+            logger.exception("SMTP 数据错误: %s", e)
             return False
 
         except smtplib.SMTPException as e:
-            logger.error("SMTP 协议错误: %s", e)
+            logger.exception("SMTP 协议错误: %s", e)
             self._close_connection()
             return False
 
         except socket.timeout:
-            logger.error("邮件发送超时 (>%d秒): %s", self.timeout, to_addr)
+            logger.exception("邮件发送超时 (>%d秒): %s", self.timeout, to_addr)
             self._close_connection()
             return False
 
         except ConnectionError as e:
-            logger.error("邮件发送网络连接错误: %s", e)
+            logger.exception("邮件发送网络连接错误: %s", e)
             self._close_connection()
             return False
 
         except OSError as e:
-            logger.error("邮件发送系统错误: %s", e)
+            logger.exception("邮件发送系统错误: %s", e)
             self._close_connection()
             return False
 
         except Exception as e:
-            logger.error("邮件发送未知错误: %s", e)
+            logger.exception("邮件发送未知错误: %s", e)
             self._close_connection()
             return False
 
