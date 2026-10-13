@@ -10,6 +10,7 @@
 
 import logging
 import sys
+from pathlib import Path
 from dotenv import dotenv_values
 
 logger = logging.getLogger(__name__)
