@@ -9,7 +9,7 @@
 """
 
 import logging
-from pathlib import Path
+import sys
 from dotenv import dotenv_values
 
 logger = logging.getLogger(__name__)
