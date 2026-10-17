@@ -18,6 +18,9 @@ import config
 
 logger = logging.getLogger(__name__)
 
+# 命令长度上限（字节）
+MAX_COMMAND_LENGTH = 4096
+
 # ==================== 命令白名单 ====================
 # 仅允许以下安全命令执行，其他命令一律拒绝
 ALLOWED_COMMANDS = frozenset({
@@ -93,8 +96,8 @@ class CommandExecutor:
         cmd_stripped = cmd.strip()
 
         # 检查命令长度，防止超长命令
-        if len(cmd_stripped) > 4096:
-            return False, f"命令过长（{len(cmd_stripped)} 字符），最大允许 4096 字符"
+        if len(cmd_stripped) > MAX_COMMAND_LENGTH:
+            return False, f"命令过长（{len(cmd_stripped)} 字符），最大允许 {MAX_COMMAND_LENGTH} 字符"
 
         # 检查危险字符（可通过配置关闭）
         if config.CMD_BLOCK_META_ENABLE and _BLOCKED_META_PATTERN.search(cmd_stripped):
