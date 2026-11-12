@@ -222,7 +222,7 @@ class CommandExecutor:
                 logger.warning("sudo 子命令被拦截: %s, 原因: %s", _sanitize_cmd(real_cmd), sub_reason)
                 return -1, "", f"[命令被拒绝] {sub_reason}"
             try:
-                cmd_parts = ["sudo", "-S"] + shlex.split(real_cmd)
+                cmd_parts = ["sudo", "-S", *shlex.split(real_cmd)]
             except ValueError as e:
                 return -1, "", f"[命令解析失败] {e}"
             # 日志记录脱敏后的命令
