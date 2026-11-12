@@ -7,7 +7,6 @@ CommandExecutor 单元测试
 
 import sys
 import os
-import pytest
 
 # 将项目根目录加入 sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

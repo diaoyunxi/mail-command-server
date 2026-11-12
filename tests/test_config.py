@@ -7,10 +7,7 @@ config 模块单元测试
 
 import sys
 import os
-import tempfile
-import pytest
 from pathlib import Path
-from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
