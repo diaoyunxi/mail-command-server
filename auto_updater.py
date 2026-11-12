@@ -332,10 +332,9 @@ class AutoUpdater:
             logger.warning("无法写入重启计数文件: %s", e)
             # 清理可能残留的临时文件
             try:
-                if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
-                    if os.path.exists(_RESTART_COUNT_FILE + ".tmp"):
-
-                        os.remove(_RESTART_COUNT_FILE + ".tmp")
+                tmp = _RESTART_COUNT_FILE + ".tmp"
+                if os.path.exists(tmp):
+                    os.remove(tmp)
             except OSError:
                 pass
 
