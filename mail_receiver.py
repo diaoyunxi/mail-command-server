@@ -13,6 +13,7 @@
 """
 
 import time
+import contextlib
 import logging
 import threading
 import collections
@@ -455,10 +456,8 @@ class ImapReceiver:
             logger.exception("IMAP 连接失败: %s", e)
         finally:
             if server:
-                try:
+                with contextlib.suppress(Exception):
                     server.close()
-                except Exception:
-                    pass
                 try:
                     server.logout()
                 except Exception as _e:
