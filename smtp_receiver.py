@@ -244,7 +244,7 @@ class MailCommandHandler:
 class SmtpReceiver:
     """SMTP 接收服务器包装类"""
 
-    def __init__(self, host: str = None, port: int = None):
+    def __init__(self, host: str | None = None, port: int | None = None):
         self.host = host or config.SMTP_BIND_HOST
         self.port = port or config.SMTP_BIND_PORT
         self.controller = None
