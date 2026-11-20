@@ -20,6 +20,7 @@ import poplib
 import imaplib
 import email
 import email.policy
+from email.utils import parseaddr
 from typing import List, Optional
 
 import config
@@ -289,7 +290,9 @@ class Pop3Receiver:
 
                     # 解析发件人
                     msg = email.message_from_bytes(raw_data, policy=email.policy.default)
-                    mail_from = msg.get("From", "")
+                    # 解析发件人：From 头可能是 "显示名 <addr@x.com>"，需提取裸地址，
+                    # 否则 _is_sender_allowed（按裸邮箱比对）会永远匹配失败
+                    mail_from = parseaddr(msg.get("From", ""))[1]
                     rcpt_tos = [msg.get("To", "")]
 
                     logger.info("处理 POP3 邮件: uid=%s, from=%s", uid, mail_from)
@@ -434,7 +437,9 @@ class ImapReceiver:
                         continue
 
                     msg = email.message_from_bytes(raw_data, policy=email.policy.default)
-                    mail_from = msg.get("From", "")
+                    # 解析发件人：From 头可能是 "显示名 <addr@x.com>"，需提取裸地址，
+                    # 否则 _is_sender_allowed（按裸邮箱比对）会永远匹配失败
+                    mail_from = parseaddr(msg.get("From", ""))[1]
                     rcpt_tos = [msg.get("To", "")]
 
                     msg_id_str = msg_id.decode() if isinstance(msg_id, bytes) else str(msg_id)
