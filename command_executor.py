@@ -38,7 +38,7 @@ FIND_ALLOWED_ROOTS = frozenset({"/home", "/tmp", "/var/log", "/opt", "/srv"})
 
 # 禁止的 shell 元字符（管道、重定向、命令替换等），防止命令注入
 # 注意：不禁止 [ ] ! { } 等在正则表达式参数中常见的字符
-_BLOCKED_META_PATTERN = re.compile(r'[|;`$()>&<]')
+_BLOCKED_META_PATTERN = re.compile(r'[|;`$()>&<\n\r]')
 
 # 敏感参数脱敏正则（匹配 -p / --password / --pass 后跟的值）
 _SENSITIVE_PARAM_PATTERN = re.compile(
