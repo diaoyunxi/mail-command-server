@@ -1,4 +1,3 @@
-import signal
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -55,8 +54,8 @@ import signal
 
 import logging
 import logging.handlers
+import signal
 import sys
-
 import config
 from smtp_receiver import SmtpReceiver
 from mail_receiver import MailReceiver
