@@ -123,6 +123,9 @@ class CommandExecutor:
             if cmd_idx >= len(parts):
                 return False, "sudo 后缺少实际命令"
             cmd_name = os.path.basename(parts[cmd_idx])
+            # 安全修复：禁止嵌套 sudo 调用（如 sudo sudo ls），防止绕过白名单校验
+            if cmd_name.lower() == "sudo":
+                return False, "禁止嵌套 sudo 调用（安全策略）"
             check_start = cmd_idx + 1
         else:
             cmd_name = os.path.basename(parts[0])
